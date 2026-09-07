@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Funding Carry Monitor</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --border: rgba(11,11,11,0.10);
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #008300; --s7: #4a3aa7; --s8: #e34948;
+    --good: #006300; --bad: #d03b3b; --warn: #fab219;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --border: rgba(255,255,255,0.10);
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
+      --good: #0ca30c;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { padding: 20px 24px 8px; display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: baseline; }
+  header h1 { font-size: 20px; margin: 0; font-weight: 600; }
+  header .meta { color: var(--muted); font-size: 12px; }
+  nav { padding: 0 24px; border-bottom: 1px solid var(--border); display: flex; gap: 4px; }
+  nav button { background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 14px; color: var(--ink-2); font: inherit; cursor: pointer; }
+  nav button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--s1); font-weight: 600; }
+  main { padding: 16px 24px 40px; max-width: 1200px; margin: 0 auto; }
+  section[hidden] { display: none; }
+  h2 { font-size: 15px; font-weight: 600; margin: 24px 0 10px; color: var(--ink); }
+  h2 small { color: var(--muted); font-weight: 400; margin-left: 8px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+  .tile .label { font-size: 12px; color: var(--ink-2); }
+  .tile .value { font-size: 24px; font-weight: 600; margin-top: 2px; }
+  .tile .sub { font-size: 12px; color: var(--muted); }
+  .up { color: var(--good); } .down { color: var(--bad); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px; }
+  .chart { position: relative; min-height: 320px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: flex-end; font-size: 12px; color: var(--ink-2); margin-bottom: 6px; }
+  .legend i { width: 10px; height: 10px; }
+  .svgwrap { position: relative; }
+  .svgwrap svg { display: block; max-width: 100%; }
+  .tip { position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 12px; color: var(--ink); box-shadow: 0 2px 8px rgba(0,0,0,0.12); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .tipdate { color: var(--muted); margin-bottom: 2px; }
+  .tablewrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { padding: 6px 10px; text-align: right; border-bottom: 1px solid var(--grid); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  th { color: var(--ink-2); font-weight: 500; }
+  th:first-child, td:first-child { text-align: left; }
+  tr.best td { font-weight: 600; }
+  .empty { color: var(--ink-2); padding: 32px; text-align: center; border: 1px dashed var(--border); border-radius: 8px; }
+  .empty code { background: var(--page); padding: 1px 6px; border-radius: 4px; }
+  .badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; border: 1px solid var(--border); color: var(--ink-2); }
+  .badge.yes { color: var(--ink); border-color: var(--s1); }
+  .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+  .note { color: var(--muted); font-size: 12px; margin-top: 8px; }
+  a { color: var(--s1); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Funding Carry Monitor</h1>
+  <span class="meta" id="meta">読み込み中…</span>
+</header>
+<nav role="tablist">
+  <button role="tab" aria-selected="true" data-tab="paper">ペーパートレード</button>
+  <button role="tab" aria-selected="false" data-tab="backtest">バックテスト</button>
+</nav>
+<main>
+  <section id="paper"></section>
+  <section id="backtest" hidden></section>
+</main>
+
+<script>
+const SERIES = ['--s1','--s2','--s3','--s4','--s5','--s6','--s7','--s8'];
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const pct = (x, d = 2) => (x == null || Number.isNaN(x)) ? '–' : (x * 100).toFixed(d) + '%';
+const num = (x, d = 2) => (x == null || Number.isNaN(x)) ? '–' : Number(x).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+const sign = x => x > 0 ? 'up' : x < 0 ? 'down' : '';
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+async function loadJSON(path) {
+  try {
+    const r = await fetch(path + '?t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch (e) { return null; }
+}
+
+function tile(label, value, sub = '', cls = '') {
+  return `<div class="tile"><div class="label">${label}</div><div class="value ${cls}">${value}</div><div class="sub">${sub}</div></div>`;
+}
+function table(headers, rows, opts = {}) {
+  const th = headers.map(h => `<th>${h}</th>`).join('');
+  const tr = rows.map((r, i) => `<tr class="${opts.bestIndex === i ? 'best' : ''}">${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('');
+  return `<div class="tablewrap"><table><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table></div>`;
+}
+/* Dependency-free SVG line chart: fixed series colors, hairline grid, crosshair + tooltip. */
+function lineChart(host, labels, datasets, yLabel) {
+  const render = () => {
+    const W = Math.max(host.clientWidth || 800, 320), H = 320, m = { t: 12, r: 16, b: 34, l: 64 };
+    const iw = W - m.l - m.r, ih = H - m.t - m.b;
+    const vals = datasets.flatMap(d => d.data).filter(v => v != null);
+    if (!vals.length || labels.length < 2) { host.innerHTML = '<div class="note">データ不足</div>'; return; }
+    let lo = Math.min(...vals), hi = Math.max(...vals);
+    if (hi === lo) { hi += 1; lo -= 1; }
+    const pad = (hi - lo) * 0.08; lo -= pad; hi += pad;
+    const x = i => m.l + (i / (labels.length - 1)) * iw;
+    const y = v => m.t + (1 - (v - lo) / (hi - lo)) * ih;
+    const yTicks = 5, xTicks = Math.min(8, labels.length);
+    let g = '';
+    for (let k = 0; k <= yTicks; k++) {
+      const v = lo + (hi - lo) * k / yTicks, yy = y(v);
+      g += `<line x1="${m.l}" x2="${W - m.r}" y1="${yy}" y2="${yy}" stroke="var(--grid)" stroke-width="1"/>`;
+      g += `<text x="${m.l - 8}" y="${yy + 4}" text-anchor="end" fill="var(--muted)" font-size="11">${num(v, 0)}</text>`;
+    }
+    for (let k = 0; k < xTicks; k++) {
+      const i = Math.round(k * (labels.length - 1) / (xTicks - 1));
+      const anchor = k === 0 ? 'start' : k === xTicks - 1 ? 'end' : 'middle';
+      g += `<text x="${x(i)}" y="${H - 12}" text-anchor="${anchor}" fill="var(--muted)" font-size="11">${labels[i].length <= 16 ? labels[i] : labels[i].slice(0, 10)}</text>`;
+    }
+    g += `<line x1="${m.l}" x2="${W - m.r}" y1="${m.t + ih}" y2="${m.t + ih}" stroke="var(--grid)"/>`;
+    g += `<text transform="translate(14 ${m.t + ih / 2}) rotate(-90)" text-anchor="middle" fill="var(--ink-2)" font-size="11">${yLabel}</text>`;
+    const paths = datasets.map(d => {
+      let p = '', pen = false;
+      d.data.forEach((v, i) => { if (v == null) { pen = false; return; } p += `${pen ? 'L' : 'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`; pen = true; });
+      return `<path d="${p}" fill="none" stroke="${d.color}" stroke-width="2" stroke-linejoin="round" ${d.dashed ? 'stroke-dasharray="6 4"' : ''}/>`;
+    }).join('');
+    const legend = datasets.length > 1 ? `<div class="legend">${datasets.map(d =>
+      `<span><i class="swatch" style="background:${d.color};${d.dashed ? 'height:2px;border-top:2px dashed ' + d.color + ';background:none;' : ''}"></i>${d.label}</span>`).join('')}</div>` : '';
+    host.innerHTML = `${legend}<div class="svgwrap"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${yLabel}">
+      ${g}${paths}<g class="hover" style="display:none"><line y1="${m.t}" y2="${m.t + ih}" stroke="var(--muted)" stroke-dasharray="3 3"/>
+      ${datasets.map(d => `<circle r="4" fill="${d.color}" stroke="var(--surface)" stroke-width="2"/>`).join('')}</g>
+      <rect x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent"/></svg><div class="tip" style="display:none"></div></div>`;
+    const svg = host.querySelector('svg'), hov = svg.querySelector('.hover'), tip = host.querySelector('.tip');
+    const dots = hov.querySelectorAll('circle'), vline = hov.querySelector('line');
+    svg.addEventListener('mousemove', ev => {
+      const r = svg.getBoundingClientRect();
+      const i = Math.max(0, Math.min(labels.length - 1, Math.round((ev.clientX - r.left - m.l) / iw * (labels.length - 1))));
+      hov.style.display = ''; vline.setAttribute('x1', x(i)); vline.setAttribute('x2', x(i));
+      datasets.forEach((d, k) => { const v = d.data[i]; dots[k].style.display = v == null ? 'none' : ''; if (v != null) { dots[k].setAttribute('cx', x(i)); dots[k].setAttribute('cy', y(v)); } });
+      tip.style.display = '';
+      tip.innerHTML = `<div class="tipdate">${labels[i]}</div>` + datasets.map(d => d.data[i] == null ? '' :
+        `<div><i class="swatch" style="background:${d.color}"></i>${d.label}: <b>${num(d.data[i])}</b></div>`).join('');
+      const left = ev.clientX - r.left, flip = left > W * 0.6;
+      tip.style.left = flip ? 'auto' : (left + 14) + 'px'; tip.style.right = flip ? (W - left + 14) + 'px' : 'auto';
+      tip.style.top = Math.max(0, ev.clientY - r.top - 10) + 'px';
+    });
+    svg.addEventListener('mouseleave', () => { hov.style.display = 'none'; tip.style.display = 'none'; });
+  };
+  render();
+  new ResizeObserver(() => render()).observe(host);
+}
+function emptyState(what, how) {
+  return `<div class="empty"><p><strong>${what}のデータはまだありません。</strong></p><p>${how}</p></div>`;
+}
+
+/* ---------------- paper ---------------- */
+function renderPaper(p) {
+  const el = document.getElementById('paper');
+  if (!p) {
+    el.innerHTML = emptyState('ペーパートレード', 'GitHub Actions の <code>paper-trade</code> を手動実行するか、8 時間ごとの自動実行を待ってください。');
+    return;
+  }
+  const held = p.states.filter(s => s.held);
+  const tightest = held.filter(s => s.liq_distance != null).sort((a, b) => a.liq_distance - b.liq_distance)[0];
+  el.innerHTML = `
+    <div class="tiles">
+      ${tile('エクイティ', num(p.equity) + ' <span style="font-size:13px">USDT</span>', `元本 ${num(p.capital, 0)} USDT`)}
+      ${tile('累計リターン', pct(p.return), `${p.days.toFixed(1)} 日`, sign(p.return))}
+      ${tile('年換算', p.apr == null ? 'n/a' : pct(p.apr), p.apr == null ? '運用 1 日未満' : '単純年換算', sign(p.apr))}
+      ${tile('受取 Funding 累計', num(p.funding_total, 2), `今回 ${num(p.funding_this_run, 4)}`, sign(p.funding_total))}
+      ${tile('建玉', `${p.n_open} / ${p.slots}`, `閾値 ${pct(p.threshold, 3)} · 直近 ${p.lookback} 回平均`)}
+      ${tile('最も近い清算距離', tightest ? pct(tightest.liq_distance, 1) : '–', tightest ? `${tightest.symbol} · 証拠金率 ${pct(tightest.margin_ratio)}` : '建玉なし')}
+    </div>
+    <h2>エクイティ推移<small>run ごと</small></h2>
+    <div class="card"><div class="chart" id="paperEq"></div></div>
+    <h2>建玉とリスク<small>run #${p.run_id}</small></h2>
+    <div class="card">${table(
+      ['銘柄', '建玉', '今回', 'シグナル', 'Mark', 'Spot', 'Funding 積算', 'ベーシス MTM', '証拠金率', '清算価格', '清算距離'],
+      p.states.slice().sort((a, b) => (b.held - a.held) || a.symbol.localeCompare(b.symbol)).map(s => [
+        esc(s.symbol),
+        `<span class="badge ${s.held ? 'yes' : ''}">${s.held ? '保有' : '–'}</span>`,
+        s.action || '', pct(s.signal, 4), num(s.mark_price, 4), num(s.spot_price, 4),
+        s.held ? num(s.funding_accrued, 4) : '–', num(s.unrealized, 4), pct(s.margin_ratio), num(s.liq_price, 4), pct(s.liq_distance, 1),
+      ]))}
+      <p class="note">証拠金率 = 維持証拠金 ÷ (証拠金 + 未実現損益)。100% で清算。清算距離 = Mark がどれだけ上昇すると清算されるか。</p>
+    </div>
+    ${Object.keys(p.skipped || {}).length ? `<h2>スキップ</h2><div class="card">${Object.entries(p.skipped).map(([k, v]) => `<div><code>${esc(k)}</code>: ${esc(v)}</div>`).join('')}</div>` : ''}
+    <h2>直近トレード<small>最大 50 件</small></h2>
+    <div class="card">${p.recent_trades.length ? table(
+      ['時刻', '銘柄', '種別', 'Spot', 'Perp', '想定元本', '手数料', '実現損益', 'シグナル'],
+      p.recent_trades.map(t => [esc(t.ts), esc(t.symbol), t.side, num(t.spot_price, 4), num(t.perp_price, 4), num(t.notional), num(t.fees, 4),
+        t.realized == null ? '–' : `<span class="${sign(t.realized)}">${num(t.realized, 4)}</span>`, pct(t.signal, 4)])
+    ) : '<div class="note">まだトレードはありません。</div>'}</div>`;
+  lineChart(document.getElementById('paperEq'), p.equity_history.map(h => h.t.slice(0, 16).replace('T', ' ')),
+    [{ label: 'エクイティ', data: p.equity_history.map(h => h.equity), color: css('--s1') }], 'USDT');
+}
+
+/* ---------------- backtest ---------------- */
+function renderBacktest(b) {
+  const el = document.getElementById('backtest');
+  if (!b) {
+    el.innerHTML = emptyState('バックテスト', 'GitHub Actions の <code>backtest</code> を手動実行すると、1 年分のデータ取得とレポート生成が行われます。');
+    return;
+  }
+  const best = b.thresholds.find(t => t.threshold === b.best_threshold) || b.thresholds[0];
+  const wf = b.walkforward;
+  const bestIdx = b.thresholds.indexOf(best);
+  el.innerHTML = `
+    <div class="tiles">
+      ${tile('年換算利回り（最良）', pct(best.apr), `閾値 ${pct(best.threshold, 3)} · in-sample`, sign(best.apr))}
+      ${tile('Walk-forward OOS', wf ? pct(wf.oos.apr) : '–', wf ? `${wf.windows.length} 窓 · max DD ${pct(wf.oos.max_drawdown)}` : '未実行', wf ? sign(wf.oos.apr) : '')}
+      ${tile('最大ドローダウン', pct(best.max_drawdown), '元本比', 'down')}
+      ${tile('建玉日数比率', pct(best.exposure_days_ratio, 1), `スロット稼働 ${pct(best.avg_slot_utilisation, 1)}`)}
+      ${tile('トレード数', best.trades, `${(best.days).toFixed(0)} 日 · 往復コスト ${pct(b.config.round_trip_cost)}`)}
+      ${tile('データ', `${b.data.symbols.length} 銘柄`, `${b.data.start} → ${b.data.end} · ${b.data.events.toLocaleString()} 回`)}
+    </div>
+    <h2>エクイティ曲線<small>閾値別 · 破線 = Walk-forward OOS</small></h2>
+    <div class="card"><div class="chart" id="btEq"></div></div>
+    <h2>閾値比較<small>全期間 in-sample</small></h2>
+    <div class="card">${table(
+      ['閾値 / 回', 'APR', '最大 DD', '建玉日数', 'スロット稼働', 'トレード', 'Funding PnL', 'コスト', '純損益'],
+      b.thresholds.map(t => [pct(t.threshold, 3), `<span class="${sign(t.apr)}">${pct(t.apr)}</span>`, pct(t.max_drawdown), pct(t.exposure_days_ratio, 1),
+        pct(t.avg_slot_utilisation, 1), t.trades, num(t.funding_pnl), num(t.costs), num(t.net_pnl)]), { bestIndex: bestIdx })}</div>
+    <h2>銘柄別内訳<small>閾値 ${pct(best.threshold, 3)}</small></h2>
+    <div class="card">${table(
+      ['銘柄', '回数', 'トレード', '保有比率', '平均レート', 'Funding PnL', 'コスト', '純損益', 'スロット APR'],
+      b.per_symbol.map(r => [esc(r.symbol), r.events, r.trades, pct(r.held_ratio, 1), pct(r.mean_rate, 4), num(r.funding_pnl), num(r.costs),
+        `<span class="${sign(r.net_pnl)}">${num(r.net_pnl)}</span>`, pct(r.apr_on_slot)]))}</div>
+    ${wf ? `<h2>Walk-forward<small>学習 ${b.config.train_days} 日 → 検証 ${b.config.test_days} 日 · ステップ ${b.config.step_days} 日</small></h2>
+    <div class="card">${table(
+      ['学習開始', '学習終了', '検証終了', '採用閾値', '学習 APR', '検証 APR', '検証 max DD', '検証トレード'],
+      wf.windows.map(w => [w.train_start, w.train_end, w.test_end, pct(w.chosen_threshold, 3), pct(w.train_apr),
+        `<span class="${sign(w.test_apr)}">${pct(w.test_apr)}</span>`, pct(w.test_max_drawdown), w.test_trades]))}
+      <p class="note">OOS 合計: 純損益 ${num(wf.oos.net_pnl)} USDT / ${wf.oos.days.toFixed(0)} 日 · 建玉日数 ${pct(wf.oos.exposure_days_ratio, 1)} · トレード ${wf.oos.trades}</p></div>` : ''}
+    <p class="note">前提: 現物ロングと先物ショートは等額でベーシス変動は相殺とみなす。Funding PnL = レグ想定元本 × レート。想定元本は固定（複利なし）。APR = 純損益 ÷ 元本 × 365 ÷ 日数。</p>`;
+
+  // Equity chart: union of dates across curves, one fixed color per threshold in order.
+  const keys = Object.keys(b.curves);
+  const dates = [...new Set(keys.flatMap(k => b.curves[k].map(p => p.t)).concat(wf ? wf.curve.map(p => p.t) : []))].sort();
+  const series = (pts, label, color, dashed) => {
+    const m = new Map(pts.map(p => [p.t, p.equity]));
+    return { label, data: dates.map(d => m.has(d) ? m.get(d) : null), color, dashed };
+  };
+  const datasets = keys.map((k, i) => series(b.curves[k], `閾値 ${pct(parseFloat(k), 3)}`, css(SERIES[i % SERIES.length])));
+  if (wf && wf.curve.length) datasets.push(series(wf.curve, 'Walk-forward OOS', css('--ink-2'), true));
+  lineChart(document.getElementById('btEq'), dates, datasets, 'USDT');
+}
+
+/* ---------------- boot ---------------- */
+document.querySelectorAll('nav button').forEach(btn => btn.addEventListener('click', () => {
+  document.querySelectorAll('nav button').forEach(b => b.setAttribute('aria-selected', b === btn));
+  document.querySelectorAll('main section').forEach(s => s.hidden = s.id !== btn.dataset.tab);
+  location.hash = btn.dataset.tab;
+}));
+if (location.hash === '#backtest') document.querySelector('[data-tab="backtest"]').click();
+
+(async () => {
+  const [paper, backtest] = await Promise.all([loadJSON('data/paper.json'), loadJSON('data/backtest.json')]);
+  const meta = [];
+  if (paper) meta.push(`paper: ${paper.generated_at.replace('T', ' ').replace('Z', ' UTC')}`);
+  if (backtest) meta.push(`backtest: ${backtest.generated_at.replace('T', ' ').replace('Z', ' UTC')}`);
+  document.getElementById('meta').textContent = meta.length ? '最終更新 · ' + meta.join(' · ') : 'データ未生成';
+  renderPaper(paper);
+  renderBacktest(backtest);
+})();
+</script>
+</body>
+</html>

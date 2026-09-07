@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# project
+__pycache__/
+.pytest_cache/
+!data/*.parquet
+!paper.db

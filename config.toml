@@ -1,0 +1,38 @@
+# Funding-rate carry paper-trading configuration.
+# Everything here is read-only market simulation; no order endpoints exist in this codebase.
+
+[universe]
+# Fixed core symbols always included; the rest is filled by 24h turnover ranking.
+core = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
+size = 10
+quote = "USDT"
+history_days = 365
+
+[capital]
+total_usdt = 10000.0
+leverage = 1.0            # perp leverage (1x -> margin == notional)
+
+[costs]
+# Per fill, as a fraction of leg notional. A round trip is 4 fills:
+# spot buy, perp sell (open) ; spot sell, perp buy (close).
+taker_fee = 0.00055       # 0.055 %
+spread = 0.0002           # 0.02 %  (half-spread paid on every fill)
+
+[strategy]
+lookback = 3              # number of settled funding rates averaged for the signal
+thresholds = [0.00005, 0.0001, 0.0002]   # 0.005 % / 0.01 % / 0.02 % per funding interval
+default_threshold = 0.0001
+
+[walkforward]
+train_days = 90
+test_days = 30
+step_days = 30
+
+[paper]
+db_path = "paper.db"
+maintenance_margin_rate = 0.005   # 0.5 % (Bybit tier-1 for majors; conservative for alts)
+
+[paths]
+data_dir = "data"
+reports_dir = "reports"
+site_dir = "docs"           # GitHub Pages dashboard; JSON data goes to docs/data/
