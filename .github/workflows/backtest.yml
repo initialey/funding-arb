@@ -1,0 +1,52 @@
+name: backtest
+
+on:
+  schedule:
+    # Weekly refresh of the 1-year dataset and the backtest report (Mondays 01:00 UTC).
+    - cron: "0 1 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: backtest
+  cancel-in-progress: false
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Unit tests
+        run: pytest -q
+
+      - name: Fetch 1y funding history + daily klines
+        run: python scripts/fetch_data.py
+
+      - name: Run backtest + walk-forward
+        run: python scripts/run_backtest.py
+
+      - name: Commit data and reports
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/*.parquet data/universe.json reports/backtest_report.md reports/backtest_equity.png reports/backtest_summary.json || true
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
+          else
+            git commit -m "backtest: refresh $(date -u +%Y-%m-%d)"
+            git pull --rebase origin "${{ github.ref_name }}"
+            git push origin HEAD:"${{ github.ref_name }}"
+          fi
