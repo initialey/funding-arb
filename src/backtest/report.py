@@ -160,6 +160,7 @@ def write_backtest_json(
     best = max(summaries, key=lambda s: s.apr)
     payload = {
         "generated_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "exchange": cfg.exchange.name,
         "data": {
             "symbols": sorted(funding["symbol"].unique().tolist()),
             "events": int(len(funding)),

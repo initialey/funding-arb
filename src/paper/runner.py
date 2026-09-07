@@ -18,7 +18,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 from src.config import Config
-from src.data.bybit_client import BybitError, BybitPublicClient
+from src.data.exchange import MarketDataSource
 from src.data.universe import select_universe
 from src.paper import db as pdb
 from src.paper.portfolio import (
@@ -87,38 +87,27 @@ class RunSummary:
     universe: list[str] = field(default_factory=list)
 
 
-def fetch_snapshot(client: BybitPublicClient, symbol: str, lookback: int) -> MarketSnapshot:
-    hist = client.funding_history(symbol, limit=max(lookback + 5, 8))
-    settled = sorted(
-        ((datetime.fromtimestamp(int(r["fundingRateTimestamp"]) / 1000, tz=timezone.utc), float(r["fundingRate"])) for r in hist),
-        key=lambda x: x[0],
-    )
-    lin = client.tickers("linear", symbol)
-    if not lin:
-        raise BybitError(f"no linear ticker for {symbol}")
-    t = lin[0]
-    mark = float(t.get("markPrice") or t["lastPrice"])
-    perp_last = float(t["lastPrice"])
+def fetch_snapshot(source: MarketDataSource, symbol: str, lookback: int) -> MarketSnapshot:
+    settled = source.recent_funding(symbol, max(lookback + 5, 8))
+    t = source.perp_ticker(symbol)
     try:
-        spot = client.tickers("spot", symbol)
-        spot_price = float(spot[0]["lastPrice"]) if spot else perp_last
-    except BybitError as exc:
+        spot_price = source.spot_price(symbol)
+    except Exception as exc:  # spot pair missing on this venue -> fall back to perp last
         log.warning("spot ticker for %s unavailable (%s); using perp last", symbol, exc)
-        spot_price = perp_last
-    nft = t.get("nextFundingTime")
+        spot_price = t.last_price
     return MarketSnapshot(
         symbol=symbol,
-        mark_price=mark,
-        perp_last=perp_last,
+        mark_price=t.mark_price,
+        perp_last=t.last_price,
         spot_price=spot_price,
         settled=settled,
-        next_funding_ts=datetime.fromtimestamp(int(nft) / 1000, tz=timezone.utc) if nft else None,
-        current_rate=float(t["fundingRate"]) if t.get("fundingRate") not in (None, "") else None,
+        next_funding_ts=t.next_funding_time,
+        current_rate=t.funding_rate,
     )
 
 
 def run_step(
-    client: BybitPublicClient,
+    source: MarketDataSource,
     conn: sqlite3.Connection,
     cfg: Config,
     now: datetime | None = None,
@@ -135,8 +124,8 @@ def run_step(
 
     # 1. universe
     try:
-        universe = select_universe(client.tickers("linear"), cfg.universe)
-    except BybitError as exc:
+        universe = select_universe(source.perp_tickers(), cfg.universe)
+    except Exception as exc:  # network / venue error: keep going with the core list
         universe = list(cfg.universe.core)
         skipped["__universe__"] = f"tickers failed, using core only: {exc}"
     symbols = list(dict.fromkeys(universe + list(positions)))
@@ -154,8 +143,8 @@ def run_step(
     for sym in symbols:
         pos = positions.get(sym)
         try:
-            snap = fetch_snapshot(client, sym, lookback)
-        except (BybitError, KeyError, ValueError, IndexError) as exc:
+            snap = fetch_snapshot(source, sym, lookback)
+        except Exception as exc:  # any fetch/parse failure: skip this symbol this run
             skipped[sym] = str(exc)
             conn.execute("INSERT INTO skips (run_id, ts, symbol, reason) VALUES (?, ?, ?, ?)", (run_id, _iso(now), sym, str(exc)))
             if pos is not None:  # keep the position, count its committed capital, no state change

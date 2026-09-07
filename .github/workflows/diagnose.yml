@@ -1,10 +1,9 @@
 name: diagnose-egress
 
+# Manual probe: which exchange public APIs are reachable from GitHub-hosted runners
+# (US IPs) and how much funding history each one serves. Read-only GET/POST-info calls.
 on:
   workflow_dispatch:
-  push:
-    branches: ["claude/**"]
-    paths: [".github/workflows/diagnose.yml"]
 
 permissions:
   contents: read
@@ -16,47 +15,19 @@ jobs:
     steps:
       - name: Runner location
         run: curl -sS --max-time 10 https://ipinfo.io/json || true
-      - name: Bybit (default UA)
-        run: curl -sS --max-time 15 -o /dev/null -w "bybit default UA -> %{http_code}\n" "https://api.bybit.com/v5/market/time" || true
-      - name: Bybit (browser UA)
-        run: curl -sS --max-time 15 -A "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/128 Safari/537.36" -o /dev/null -w "bybit browser UA -> %{http_code}\n" "https://api.bybit.com/v5/market/time" || true
-      - name: Bybit alt domains
+      - name: Bybit domains
         run: |
-          for h in api.bytick.com api.bybit.nl api.bybit-tr.com api.bybit.kz api.bybitgeorgia.ge; do
+          for h in api.bybit.com api.bytick.com api.bybit.nl api.bybit-tr.com api.bybit.kz; do
             curl -sS --max-time 15 -o /dev/null -w "$h -> %{http_code}\n" "https://$h/v5/market/time" || echo "$h -> error"
           done
-      - name: Other venues (read-only public endpoints)
+      - name: Other venues
         run: |
-          curl -sS --max-time 15 -o /dev/null -w "okx -> %{http_code}\n" "https://www.okx.com/api/v5/public/funding-rate?instId=BTC-USDT-SWAP" || true
-          curl -sS --max-time 15 -o /dev/null -w "binance fapi -> %{http_code}\n" "https://fapi.binance.com/fapi/v1/fundingRate?symbol=BTCUSDT&limit=1" || true
-          curl -sS --max-time 15 -o /dev/null -w "bitget -> %{http_code}\n" "https://api.bitget.com/api/v2/mix/market/current-fund-rate?symbol=BTCUSDT&productType=USDT-FUTURES" || true
           curl -sS --max-time 15 -o /dev/null -w "gate -> %{http_code}\n" "https://api.gateio.ws/api/v4/futures/usdt/funding_rate?contract=BTC_USDT&limit=1" || true
-          curl -sS --max-time 15 -o /dev/null -w "hyperliquid -> %{http_code}\n" -H "Content-Type: application/json" -d '{"type":"meta"}' "https://api.hyperliquid.xyz/info" || true
-      - name: Funding history depth per venue (BTC)
+          curl -sS --max-time 15 -o /dev/null -w "okx -> %{http_code}\n" "https://www.okx.com/api/v5/public/funding-rate?instId=BTC-USDT-SWAP" || true
+          curl -sS --max-time 15 -o /dev/null -w "bitget -> %{http_code}\n" "https://api.bitget.com/api/v2/mix/market/current-fund-rate?symbol=BTCUSDT&productType=USDT-FUTURES" || true
+          curl -sS --max-time 15 -o /dev/null -w "binance fapi -> %{http_code}\n" "https://fapi.binance.com/fapi/v1/fundingRate?symbol=BTCUSDT&limit=1" || true
+      - name: Gate funding history depth (BTC)
         run: |
-          NOW_MS=$(date +%s000); D300=$((NOW_MS - 300*86400000)); D365=$((NOW_MS - 365*86400000))
-          echo "== OKX records older than 300d (empty => <300d depth)"
-          curl -sS --max-time 15 "https://www.okx.com/api/v5/public/funding-rate-history?instId=BTC-USDT-SWAP&limit=3&after=$D300" | head -c 600; echo
-          echo "== Bitget page 11 of 100 (~1000 records back)"
-          curl -sS --max-time 15 "https://api.bitget.com/api/v2/mix/market/history-fund-rate?symbol=BTCUSDT&productType=USDT-FUTURES&pageSize=100&pageNo=11" | head -c 600; echo
-          echo "== Gate limit=1000: count and oldest"
-          curl -sS --max-time 15 "https://api.gateio.ws/api/v4/futures/usdt/funding_rate?contract=BTC_USDT&limit=1000" | python3 -c "import sys,json,datetime;d=json.load(sys.stdin);print(len(d),'records; oldest',datetime.datetime.utcfromtimestamp(min(x['t'] for x in d)))"
-          echo "== Gate from/to 365d"
-          curl -sS --max-time 15 "https://api.gateio.ws/api/v4/futures/usdt/funding_rate?contract=BTC_USDT&limit=1000&from=$((D365/1000))&to=$(( (D365/1000)+86400*30 ))" | head -c 400; echo
-          echo "== Hyperliquid fundingHistory from 365d"
-          curl -sS --max-time 15 -H "Content-Type: application/json" -d "{\"type\":\"fundingHistory\",\"coin\":\"BTC\",\"startTime\":$D365}" "https://api.hyperliquid.xyz/info" | python3 -c "import sys,json,datetime;d=json.load(sys.stdin);print(len(d),'records; first',datetime.datetime.utcfromtimestamp(d[0]['time']/1000) if d else None)"
-          echo "== OKX spot + swap tickers reachable"
-          curl -sS --max-time 15 -o /dev/null -w "okx spot tickers -> %{http_code}\n" "https://www.okx.com/api/v5/market/tickers?instType=SPOT"
-          curl -sS --max-time 15 -o /dev/null -w "bitget spot tickers -> %{http_code}\n" "https://api.bitget.com/api/v2/spot/market/tickers"
-          curl -sS --max-time 15 -o /dev/null -w "gate spot tickers -> %{http_code}\n" "https://api.gateio.ws/api/v4/spot/tickers"
-      - name: Bitget / Gate depth detail
-        run: |
-          for p in 2 4 6 8 10; do
-            printf "bitget page %s -> " "$p"
-            curl -sS --max-time 15 "https://api.bitget.com/api/v2/mix/market/history-fund-rate?symbol=BTCUSDT&productType=USDT-FUTURES&pageSize=100&pageNo=$p" | python3 -c "import sys,json,datetime;d=json.load(sys.stdin)['data'];print(len(d),'oldest',datetime.datetime.fromtimestamp(int(d[-1]['fundingTime'])/1000,datetime.UTC) if d else None)"
-          done
           NOW=$(date +%s)
-          printf "gate from 180d window -> "
-          curl -sS --max-time 15 "https://api.gateio.ws/api/v4/futures/usdt/funding_rate?contract=BTC_USDT&limit=1000&from=$((NOW-179*86400))&to=$((NOW-150*86400))" | python3 -c "import sys,json,datetime;d=json.load(sys.stdin);print(len(d),'oldest',datetime.datetime.fromtimestamp(min(x['t'] for x in d),datetime.UTC) if isinstance(d,list) and d else d)"
-          printf "okx oldest reachable -> "
-          curl -sS --max-time 15 "https://www.okx.com/api/v5/public/funding-rate-history?instId=BTC-USDT-SWAP&limit=100&after=$(( (NOW-85*86400)*1000 ))" | python3 -c "import sys,json,datetime;d=json.load(sys.stdin)['data'];print(len(d),'oldest',datetime.datetime.fromtimestamp(int(d[-1]['fundingTime'])/1000,datetime.UTC) if d else None)"
+          curl -sS --max-time 15 "https://api.gateio.ws/api/v4/futures/usdt/funding_rate?contract=BTC_USDT&limit=1000&from=$((NOW-179*86400))&to=$((NOW-150*86400))" \
+            | python3 -c "import sys,json,datetime;d=json.load(sys.stdin);print(len(d),'records, oldest',datetime.datetime.fromtimestamp(min(x['t'] for x in d),datetime.UTC) if isinstance(d,list) and d else d)"

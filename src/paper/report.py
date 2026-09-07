@@ -110,6 +110,7 @@ def write_paper_json(summary: RunSummary, conn: sqlite3.Connection, cfg: Config,
     funding_total = conn.execute("SELECT COALESCE(SUM(amount), 0) FROM funding_events").fetchone()[0]
     payload = {
         "generated_at": summary.ts.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "exchange": cfg.exchange.name,
         "run_id": summary.run_id,
         "threshold": summary.threshold,
         "lookback": cfg.strategy.lookback,
