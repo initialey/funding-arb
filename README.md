@@ -17,6 +17,10 @@ read-only interface (`src/data/exchange.py`), so the backtest and paper trader a
 The `diagnose-egress` workflow (manual) prints which exchange APIs a runner can reach and
 how deep Gate's history goes.
 
+Gate also lists tokenised stocks and commodities (gold, crude, SK Hynix, SanDisk…) as USDT perps,
+often with 4h or 1h funding. `[universe] exclude` and `funding_interval_s = 28800` keep the
+universe to standard 8h crypto contracts.
+
 ## What it answers
 
 *If I had held 10,000 USDT in equal spot-long / perp-short pairs across the 10 most

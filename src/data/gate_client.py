@@ -95,18 +95,28 @@ class GatePublicClient:
     # ----- MarketDataSource ----------------------------------------------
 
     @staticmethod
-    def _ticker(row: dict[str, Any]) -> Ticker:
+    def _ticker(row: dict[str, Any], contract: dict[str, Any] | None = None) -> Ticker:
+        interval = contract.get("funding_interval") if contract else None
         return Ticker(
             symbol=canonical(row["contract"]),
             last_price=float(row["last"]),
             mark_price=float(row.get("mark_price") or row["last"]),
             turnover_24h=float(row.get("volume_24h_settle") or row.get("volume_24h_quote") or 0),
             funding_rate=float(row["funding_rate"]) if row.get("funding_rate") not in (None, "") else None,
+            funding_interval_s=int(interval) if interval else None,
         )
 
     def perp_tickers(self) -> list[Ticker]:
-        rows = self.get(FUT_TICKERS)
-        return [self._ticker(r) for r in rows if str(r.get("contract", "")).endswith("_USDT")]
+        """All live USDT perps with their funding interval (from the contracts list)."""
+        contracts = {c["name"]: c for c in self.get(FUT_CONTRACTS)}
+        out = []
+        for r in self.get(FUT_TICKERS):
+            name = str(r.get("contract", ""))
+            c = contracts.get(name)
+            if not name.endswith("_USDT") or (c and c.get("in_delisting")):
+                continue
+            out.append(self._ticker(r, c))
+        return out
 
     def perp_ticker(self, symbol: str) -> Ticker:
         rows = self.get(FUT_TICKERS, {"contract": to_gate(symbol)})

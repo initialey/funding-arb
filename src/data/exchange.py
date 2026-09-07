@@ -20,6 +20,7 @@ class Ticker:
     turnover_24h: float        # quote-currency (USDT) volume over 24h
     funding_rate: float | None = None
     next_funding_time: datetime | None = None
+    funding_interval_s: int | None = None   # 28800 for the standard 8h contracts; None if unknown
 
 
 class MarketDataSource(Protocol):

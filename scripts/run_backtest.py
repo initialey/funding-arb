@@ -32,6 +32,12 @@ def main() -> int:
     thresholds = [float(x) for x in args.thresholds.split(",")] if args.thresholds else cfg.strategy.thresholds
     funding = load_parquet(Path(args.data) if args.data else funding_path(cfg.data_dir))
     funding = funding.dropna(subset=["funding_rate"]).sort_values(["symbol", "ts"]).reset_index(drop=True)
+    # The Parquet accumulates every symbol ever fetched; test only the current universe.
+    universe_file = cfg.data_dir / "universe.json"
+    if universe_file.exists():
+        current = set(json.loads(universe_file.read_text()).get("symbols", []))
+        if current:
+            funding = funding[funding["symbol"].isin(current)].reset_index(drop=True)
     n_sym = funding["symbol"].nunique()
     logging.info("loaded %d events for %d symbols", len(funding), n_sym)
 

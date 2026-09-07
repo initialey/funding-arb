@@ -151,3 +151,34 @@ def test_universe_selection_core_first_then_turnover():
                t("BTCUSDC", 5000), t("ADAUSDT", 600)]
     cfg = UniverseConfig(core=["BTCUSDT", "ETHUSDT", "SOLUSDT"], size=5)
     assert select_universe(tickers, cfg) == ["BTCUSDT", "ETHUSDT", "SOLUSDT", "DOGEUSDT", "XRPUSDT"]
+
+
+def test_universe_excludes_non_crypto_and_odd_intervals():
+    def t(sym, vol, interval=28800):
+        return Ticker(symbol=sym, last_price=1, mark_price=1, turnover_24h=vol, funding_interval_s=interval)
+
+    tickers = [t("BTCUSDT", 1000), t("XAUUSDT", 5000, 14400), t("SNDKUSDT", 4000), t("ZECUSDT", 900, 28800),
+               t("ETHUSDT", 800), t("ADAUSDT", 700, None)]
+    cfg = UniverseConfig(core=["BTCUSDT", "ETHUSDT"], size=4, exclude=["SNDKUSDT"], funding_interval_s=28800)
+    assert select_universe(tickers, cfg) == ["BTCUSDT", "ETHUSDT", "ZECUSDT", "ADAUSDT"]
+
+
+def test_gate_perp_tickers_merge_contract_interval_and_skip_delisting():
+    c = GatePublicClient()
+    payloads = {
+        "/api/v4/futures/usdt/contracts": [
+            {"name": "BTC_USDT", "funding_interval": 28800, "in_delisting": False},
+            {"name": "XAU_USDT", "funding_interval": 14400, "in_delisting": False},
+            {"name": "OLD_USDT", "funding_interval": 28800, "in_delisting": True},
+        ],
+        "/api/v4/futures/usdt/tickers": [
+            {"contract": "BTC_USDT", "last": "100", "mark_price": "100", "volume_24h_settle": "9", "funding_rate": "0.0001"},
+            {"contract": "XAU_USDT", "last": "3000", "mark_price": "3000", "volume_24h_settle": "8", "funding_rate": "0.0001"},
+            {"contract": "OLD_USDT", "last": "1", "mark_price": "1", "volume_24h_settle": "1", "funding_rate": "0"},
+            {"contract": "BTC_USD", "last": "1", "mark_price": "1", "volume_24h_settle": "1", "funding_rate": "0"},
+        ],
+    }
+    c.get = lambda path, params=None: payloads[path]  # type: ignore[method-assign]
+    out = {t.symbol: t for t in c.perp_tickers()}
+    assert set(out) == {"BTCUSDT", "XAUUSDT"}
+    assert out["BTCUSDT"].funding_interval_s == 28800 and out["XAUUSDT"].funding_interval_s == 14400

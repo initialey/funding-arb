@@ -19,6 +19,8 @@ class UniverseConfig:
     size: int = 10
     quote: str = "USDT"
     history_days: int = 365
+    exclude: list[str] = field(default_factory=list)
+    funding_interval_s: int | None = 28800
 
 
 @dataclass(frozen=True)

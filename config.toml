@@ -11,6 +11,11 @@ name = "gate"
 core = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 size = 10
 quote = "USDT"
+# Gate lists tokenised stocks / commodities as USDT perps too; keep the universe to crypto.
+exclude = ["XAUUSDT", "XAGUSDT", "CLUSDT", "NGUSDT", "SKHYNIXUSDT", "SNDKUSDT", "TSLAUSDT", "NVDAUSDT", "AAPLUSDT",
+           "MSTRUSDT", "COINUSDT", "HOODUSDT", "CRCLUSDT", "SPXUSDT", "NDXUSDT", "AMZNUSDT", "GOOGLUSDT", "METAUSDT"]
+# Only contracts with the standard 8h funding interval (commodity/stock perps often settle every 4h or 1h).
+funding_interval_s = 28800
 history_days = 365          # capped by the exchange's own history limit (Gate: 180)
 
 [capital]
