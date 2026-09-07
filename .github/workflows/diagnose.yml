@@ -1,0 +1,33 @@
+name: diagnose-egress
+
+# Manual probe: which exchange public APIs are reachable from GitHub-hosted runners
+# (US IPs) and how much funding history each one serves. Read-only GET/POST-info calls.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Runner location
+        run: curl -sS --max-time 10 https://ipinfo.io/json || true
+      - name: Bybit domains
+        run: |
+          for h in api.bybit.com api.bytick.com api.bybit.nl api.bybit-tr.com api.bybit.kz; do
+            curl -sS --max-time 15 -o /dev/null -w "$h -> %{http_code}\n" "https://$h/v5/market/time" || echo "$h -> error"
+          done
+      - name: Other venues
+        run: |
+          curl -sS --max-time 15 -o /dev/null -w "gate -> %{http_code}\n" "https://api.gateio.ws/api/v4/futures/usdt/funding_rate?contract=BTC_USDT&limit=1" || true
+          curl -sS --max-time 15 -o /dev/null -w "okx -> %{http_code}\n" "https://www.okx.com/api/v5/public/funding-rate?instId=BTC-USDT-SWAP" || true
+          curl -sS --max-time 15 -o /dev/null -w "bitget -> %{http_code}\n" "https://api.bitget.com/api/v2/mix/market/current-fund-rate?symbol=BTCUSDT&productType=USDT-FUTURES" || true
+          curl -sS --max-time 15 -o /dev/null -w "binance fapi -> %{http_code}\n" "https://fapi.binance.com/fapi/v1/fundingRate?symbol=BTCUSDT&limit=1" || true
+      - name: Gate funding history depth (BTC)
+        run: |
+          NOW=$(date +%s)
+          curl -sS --max-time 15 "https://api.gateio.ws/api/v4/futures/usdt/funding_rate?contract=BTC_USDT&limit=1000&from=$((NOW-179*86400))&to=$((NOW-150*86400))" \
+            | python3 -c "import sys,json,datetime;d=json.load(sys.stdin);print(len(d),'records, oldest',datetime.datetime.fromtimestamp(min(x['t'] for x in d),datetime.UTC) if isinstance(d,list) and d else d)"

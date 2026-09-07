@@ -11,7 +11,7 @@ from src.backtest.walkforward import run_walkforward
 from src.paper import db as pdb
 from src.paper.report import write_paper_json
 from src.paper.runner import run_step
-from tests.conftest import FakeBybitClient
+from tests.conftest import FakeSource
 
 
 def test_backtest_json_shape(tmp_path, funding_df, cfg):
@@ -22,6 +22,7 @@ def test_backtest_json_shape(tmp_path, funding_df, cfg):
     text = path.read_text()
     assert "NaN" not in text and "Infinity" not in text  # browsers reject non-strict JSON
     b = json.loads(text)
+    assert b["exchange"] == cfg.exchange.name
     assert set(b) >= {"generated_at", "data", "config", "best_threshold", "thresholds", "curves", "per_symbol", "walkforward"}
     assert b["best_threshold"] in [t["threshold"] for t in b["thresholds"]]
     assert len(b["curves"]) == len(cfg.strategy.thresholds)
@@ -36,7 +37,7 @@ def test_backtest_json_shape(tmp_path, funding_df, cfg):
 def test_paper_json_shape(tmp_path, cfg):
     now = datetime(2025, 6, 1, 0, 10, tzinfo=timezone.utc)
     prices = {"BTCUSDT": 100_000.0, "ETHUSDT": 3_000.0, "SOLUSDT": 150.0}
-    client = FakeBybitClient(now, {s: [0.0003] * 10 for s in prices}, prices)
+    client = FakeSource(now, {s: [0.0003] * 10 for s in prices}, prices)
     conn = pdb.connect(tmp_path / "p.db")
     run_step(client, conn, cfg, now=now)
     client.now = now + timedelta(hours=8)

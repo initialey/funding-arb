@@ -1,0 +1,16 @@
+{
+  "exchange": "gate",
+  "symbols": [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "ZECUSDT",
+    "DOGEUSDT",
+    "XRPUSDT",
+    "ADAUSDT",
+    "SUIUSDT",
+    "BNBUSDT",
+    "WLDUSDT"
+  ],
+  "skipped": {}
+}

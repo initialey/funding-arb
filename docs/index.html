@@ -264,6 +264,8 @@ if (location.hash === '#backtest') document.querySelector('[data-tab="backtest"]
 (async () => {
   const [paper, backtest] = await Promise.all([loadJSON('data/paper.json'), loadJSON('data/backtest.json')]);
   const meta = [];
+  const ex = (paper && paper.exchange) || (backtest && backtest.exchange);
+  if (ex) meta.push(`exchange: ${ex}`);
   if (paper) meta.push(`paper: ${paper.generated_at.replace('T', ' ').replace('Z', ' UTC')}`);
   if (backtest) meta.push(`backtest: ${backtest.generated_at.replace('T', ' ').replace('Z', ' UTC')}`);
   document.getElementById('meta').textContent = meta.length ? '最終更新 · ' + meta.join(' · ') : 'データ未生成';

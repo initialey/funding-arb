@@ -9,11 +9,18 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 @dataclass(frozen=True)
+class ExchangeConfig:
+    name: str = "gate"
+
+
+@dataclass(frozen=True)
 class UniverseConfig:
     core: list[str] = field(default_factory=lambda: ["BTCUSDT", "ETHUSDT", "SOLUSDT"])
     size: int = 10
     quote: str = "USDT"
     history_days: int = 365
+    exclude: list[str] = field(default_factory=list)
+    funding_interval_s: int | None = 28800
 
 
 @dataclass(frozen=True)
@@ -46,7 +53,7 @@ class StrategyConfig:
 
 @dataclass(frozen=True)
 class WalkForwardConfig:
-    train_days: int = 90
+    train_days: int = 60
     test_days: int = 30
     step_days: int = 30
 
@@ -66,6 +73,7 @@ class PathsConfig:
 
 @dataclass(frozen=True)
 class Config:
+    exchange: ExchangeConfig = field(default_factory=ExchangeConfig)
     universe: UniverseConfig = field(default_factory=UniverseConfig)
     capital: CapitalConfig = field(default_factory=CapitalConfig)
     costs: CostConfig = field(default_factory=CostConfig)
@@ -105,6 +113,7 @@ def load_config(path: Path | None = None) -> Config:
     path = path or ROOT / "config.toml"
     raw = tomllib.loads(path.read_text()) if path.exists() else {}
     return Config(
+        exchange=ExchangeConfig(**raw.get("exchange", {})),
         universe=UniverseConfig(**raw.get("universe", {})),
         capital=CapitalConfig(**raw.get("capital", {})),
         costs=CostConfig(**raw.get("costs", {})),

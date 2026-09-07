@@ -1,8 +1,25 @@
 # funding-arb
 
-Paper-trading validation of the **spot-long + perpetual-short funding carry** on Bybit.
+Paper-trading validation of the **spot-long + perpetual-short funding carry** on USDT perps.
 Real public market data, zero orders: the code base contains no order, position or
 account endpoint and needs no API key (enforced by `tests/test_safety.py`).
+
+## Exchange
+
+`config.toml → [exchange] name` selects the data source. Both adapters implement the same
+read-only interface (`src/data/exchange.py`), so the backtest and paper trader are venue-agnostic.
+
+| adapter | funding history | reachable from GitHub-hosted runners | notes |
+|---|---|---|---|
+| `gate` (default) | 180 days | yes | Gate.io v4 public API, `BTC_USDT` contracts, 8h funding |
+| `bybit` | 365 days | **no** – api.bybit.com answers 403 to US IPs | use from a non-US machine or a self-hosted runner |
+
+The `diagnose-egress` workflow (manual) prints which exchange APIs a runner can reach and
+how deep Gate's history goes.
+
+Gate also lists tokenised stocks and commodities (gold, crude, SK Hynix, SanDisk…) as USDT perps,
+often with 4h or 1h funding. `[universe] exclude` and `funding_interval_s = 28800` keep the
+universe to standard 8h crypto contracts.
 
 ## What it answers
 
@@ -18,7 +35,7 @@ and distance to liquidation.
 ```
 config.toml                 capital, costs, thresholds, walk-forward windows
 src/config.py               typed loader
-src/data/                   bybit_client (GET, /v5/market/* only), universe, fetch -> Parquet
+src/data/                   exchange (interface), gate_client, bybit_client/bybit_source, universe, fetch -> Parquet
 src/backtest/               strategy signal, engine, metrics, walk-forward, Markdown/PNG report
 src/paper/                  SQLite schema, position/margin math, 8h runner, report
 src/notify/telegram.py      optional Telegram push
@@ -26,7 +43,7 @@ scripts/fetch_data.py       1y funding history + daily klines -> data/*.parquet
 scripts/run_backtest.py     threshold comparison + walk-forward -> reports/backtest_report.md
 scripts/run_paper.py        one paper step -> paper.db, reports/paper_latest.md, Telegram
 .github/workflows/          paper_trade.yml (cron every 8h) and backtest.yml (weekly + manual)
-tests/                      unit tests with a fake Bybit client and synthetic funding data
+tests/                      unit tests with an in-memory market-data source and synthetic funding data
 ```
 
 ## Quick start
@@ -35,7 +52,7 @@ tests/                      unit tests with a fake Bybit client and synthetic fu
 pip install -r requirements.txt
 pytest -q
 
-python scripts/fetch_data.py          # ~1 year, 10 symbols, a few dozen GET calls
+python scripts/fetch_data.py          # up to 1 year (180 d on Gate), 10 symbols, ~100 GET calls
 python scripts/run_backtest.py        # writes reports/backtest_report.md + backtest_equity.png
 python scripts/run_paper.py --no-notify
 ```
@@ -54,14 +71,14 @@ Telegram: set `TELEGRAM_TOKEN` and `TELEGRAM_CHAT_ID` (env vars or repo secrets)
 | costs | per fill 0.055 % taker + 0.02 % spread; a round trip is 4 fills (spot buy, perp sell, spot sell, perp buy) = 0.30 % of leg notional |
 | basis | mark-to-market between spot and perp assumed to net to zero in the backtest; the paper trader tracks it as `basis MTM` |
 | sizing | fixed notional per slot, no compounding; APR = net PnL / capital × 365 / days |
-| walk-forward | train 90 d → test 30 d, step 30 d; threshold with best in-sample APR is applied out-of-sample; OOS segments are stitched |
+| walk-forward | train 60 d → test 30 d, step 30 d (4 windows on 180 d); threshold with best in-sample APR is applied out-of-sample; OOS segments are stitched |
 
 Outputs: annualised return, max drawdown (fraction of capital), exposure-days ratio
 (days with ≥1 pair open), slot utilisation, trade count, per-symbol breakdown, walk-forward table.
 
 ## Paper trader
 
-Every 8 hours (10 minutes after Bybit settlement) the workflow:
+Every 8 hours (10 minutes after the 00/08/16 UTC settlement) the workflow:
 
 1. refreshes the universe (core BTC/ETH/SOL + top turnover, USDT linear perps),
 2. fetches recent funding history and linear/spot tickers per symbol,
@@ -94,6 +111,6 @@ the symbols used and anything skipped.
 
 ## Safety
 
-- HTTP client accepts only `GET` on paths starting with `/v5/market/`; anything else raises before a request is made.
+- HTTP clients accept only `GET`: Bybit on paths under `/v5/market/`, Gate on an explicit allow-list of five public endpoints; anything else raises before a request is made.
 - No API key, secret or signature anywhere. Telegram is the only outbound POST.
-- `tests/test_safety.py` greps `src/` for order/position/account endpoints and signed-request headers.
+- `tests/test_safety.py` greps `src/` for order/position/account endpoints and signed-request headers of both venues.

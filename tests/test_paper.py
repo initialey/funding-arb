@@ -15,15 +15,15 @@ from src.paper.portfolio import (
 )
 from src.paper.report import telegram_text, write_paper_report
 from src.paper.runner import run_step
-from tests.conftest import FakeBybitClient
+from tests.conftest import FakeSource
 
 NOW = datetime(2025, 6, 1, 0, 10, tzinfo=timezone.utc)
 PRICES = {"BTCUSDT": 100_000.0, "ETHUSDT": 3_000.0, "SOLUSDT": 150.0, "XRPUSDT": 2.0}
 
 
-def _client(high: set[str], now=NOW, fail=None) -> FakeBybitClient:
+def _client(high: set[str], now=NOW, fail=None) -> FakeSource:
     rates = {s: ([0.0003] * 10 if s in high else [0.00001] * 10) for s in PRICES}
-    return FakeBybitClient(now, rates, PRICES, fail=fail)
+    return FakeSource(now, rates, PRICES, fail=fail)
 
 
 def test_short_risk_math():

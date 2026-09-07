@@ -1,12 +1,22 @@
 # Funding-rate carry paper-trading configuration.
 # Everything here is read-only market simulation; no order endpoints exist in this codebase.
 
+[exchange]
+# "gate"  : Gate.io v4 public API, reachable from GitHub-hosted runners, 180 days of funding history.
+# "bybit" : Bybit v5 public API, 1 year of history, but api.bybit.com rejects US IPs (GitHub runners).
+name = "gate"
+
 [universe]
 # Fixed core symbols always included; the rest is filled by 24h turnover ranking.
 core = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 size = 10
 quote = "USDT"
-history_days = 365
+# Gate lists tokenised stocks / commodities as USDT perps too; keep the universe to crypto.
+exclude = ["XAUUSDT", "XAGUSDT", "CLUSDT", "NGUSDT", "SKHYNIXUSDT", "SNDKUSDT", "TSLAUSDT", "NVDAUSDT", "AAPLUSDT",
+           "MSTRUSDT", "COINUSDT", "HOODUSDT", "CRCLUSDT", "SPXUSDT", "NDXUSDT", "AMZNUSDT", "GOOGLUSDT", "METAUSDT"]
+# Only contracts with the standard 8h funding interval (commodity/stock perps often settle every 4h or 1h).
+funding_interval_s = 28800
+history_days = 365          # capped by the exchange's own history limit (Gate: 180)
 
 [capital]
 total_usdt = 10000.0
@@ -24,7 +34,8 @@ thresholds = [0.00005, 0.0001, 0.0002]   # 0.005 % / 0.01 % / 0.02 % per funding
 default_threshold = 0.0001
 
 [walkforward]
-train_days = 90
+# 180 days of Gate history -> 60/30/30 gives 4 out-of-sample windows.
+train_days = 60
 test_days = 30
 step_days = 30
 

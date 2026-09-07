@@ -1,4 +1,4 @@
-"""Shared fixtures: a fake Bybit client that serves canned v5-shaped responses, synthetic funding data."""
+"""Shared fixtures: an in-memory MarketDataSource and synthetic funding data."""
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
@@ -9,7 +9,8 @@ import pandas as pd
 import pytest
 
 from src.config import Config, load_config
-from src.data.bybit_client import ALLOWED_PREFIX, ForbiddenEndpoint
+from src.data.exchange import Ticker
+from src.data.storage import FUNDING_COLUMNS, KLINE_COLUMNS
 
 ROOT = Path(__file__).resolve().parent.parent
 T0 = datetime(2025, 1, 1, tzinfo=timezone.utc)
@@ -41,62 +42,58 @@ def funding_df() -> pd.DataFrame:
     return synthetic_funding(["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT"])
 
 
-class FakeBybitClient:
-    """Serves the same shapes as Bybit v5 so parsing code is exercised end to end."""
+class SourceOutage(RuntimeError):
+    pass
+
+
+class FakeSource:
+    """In-memory MarketDataSource: 8h settlements ending at ``now``, small positive perp basis."""
+
+    name = "fake"
+    max_history_days = 365
 
     def __init__(self, now: datetime, rates: dict[str, list[float]], prices: dict[str, float], fail: set[str] | None = None):
         self.now = now
         self.rates = rates
         self.prices = prices
         self.fail = fail or set()
-        self.calls: list[tuple[str, dict]] = []
+        self.calls: list[tuple[str, str | None]] = []
 
-    def get(self, path: str, params=None):
-        if not path.startswith(ALLOWED_PREFIX):
-            raise ForbiddenEndpoint(path)
-        self.calls.append((path, params or {}))
-        raise NotImplementedError("tests use typed helpers")
-
-    def _check(self, symbol: str | None):
-        from src.data.bybit_client import BybitError
-
+    def _check(self, symbol: str | None, what: str):
+        self.calls.append((what, symbol))
         if symbol in self.fail:
-            raise BybitError(f"simulated outage for {symbol}")
+            raise SourceOutage(f"simulated outage for {symbol}")
 
-    def tickers(self, category="linear", symbol=None):
-        self._check(symbol)
-        self.calls.append(("tickers", {"category": category, "symbol": symbol}))
-        syms = [symbol] if symbol else list(self.prices)
-        out = []
-        for i, s in enumerate(syms):
-            p = self.prices[s] * (1.0005 if category == "linear" else 1.0)  # small positive basis
-            out.append(
-                {
-                    "symbol": s,
-                    "lastPrice": f"{p:.4f}",
-                    "markPrice": f"{p:.4f}",
-                    "turnover24h": str(1e9 / (i + 1)),
-                    "fundingRate": f"{self.rates[s][-1]:.6f}",
-                    "nextFundingTime": str(int((self.now + timedelta(hours=8)).timestamp() * 1000)),
-                }
-            )
-        return out
+    def _ticker(self, s: str, i: int) -> Ticker:
+        p = self.prices[s] * 1.0005
+        return Ticker(symbol=s, last_price=p, mark_price=p, turnover_24h=1e9 / (i + 1), funding_rate=self.rates[s][-1],
+                      next_funding_time=self.now + timedelta(hours=8))
 
-    def funding_history(self, symbol, start_ms=None, end_ms=None, limit=200, category="linear"):
-        self._check(symbol)
-        self.calls.append(("funding_history", {"symbol": symbol, "limit": limit}))
-        rates = self.rates[symbol]
-        rows = []
-        for k, r in enumerate(reversed(rates[-limit:])):
-            ts = self.now - timedelta(hours=8 * k)
-            rows.append({"symbol": symbol, "fundingRate": f"{r:.8f}", "fundingRateTimestamp": str(int(ts.timestamp() * 1000))})
-        return rows  # newest first, like the real API
+    def perp_tickers(self) -> list[Ticker]:
+        self._check(None, "perp_tickers")
+        return [self._ticker(s, i) for i, s in enumerate(self.prices)]
 
-    def kline(self, symbol, interval="D", start_ms=None, end_ms=None, limit=1000, category="linear"):
-        self._check(symbol)
-        rows = []
-        for k in range(min(limit, 5)):
-            ts = self.now - timedelta(days=k)
-            p = self.prices[symbol]
-            rows.append([str(int(ts.timestamp() * 1000)), str(p), str(p * 1.01), str(p * 0.99), str(p), "100", str(100 * p)])
-        return rows
+    def perp_ticker(self, symbol: str) -> Ticker:
+        self._check(symbol, "perp_ticker")
+        return self._ticker(symbol, list(self.prices).index(symbol))
+
+    def spot_price(self, symbol: str) -> float:
+        self._check(symbol, "spot_price")
+        return self.prices[symbol]
+
+    def recent_funding(self, symbol: str, n: int) -> list[tuple[datetime, float]]:
+        self._check(symbol, "recent_funding")
+        rates = self.rates[symbol][-n:]
+        return [(self.now - timedelta(hours=8 * (len(rates) - 1 - k)), r) for k, r in enumerate(rates)]
+
+    def funding_history(self, symbol: str, start_ms: int, end_ms: int) -> pd.DataFrame:
+        self._check(symbol, "funding_history")
+        pairs = self.recent_funding(symbol, len(self.rates[symbol]))
+        return pd.DataFrame({"symbol": symbol, "ts": [t for t, _ in pairs], "funding_rate": [r for _, r in pairs]}, columns=FUNDING_COLUMNS)
+
+    def daily_klines(self, symbol: str, start_ms: int, end_ms: int) -> pd.DataFrame:
+        self._check(symbol, "daily_klines")
+        p = self.prices[symbol]
+        rows = [{"symbol": symbol, "ts": self.now - timedelta(days=k), "open": p, "high": p * 1.01, "low": p * 0.99, "close": p,
+                 "volume": 100.0, "turnover": 100.0 * p} for k in range(5)]
+        return pd.DataFrame(rows, columns=KLINE_COLUMNS)

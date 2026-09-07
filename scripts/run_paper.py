@@ -13,7 +13,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.config import load_config  # noqa: E402
-from src.data.bybit_client import BybitPublicClient  # noqa: E402
+from src.data import make_source  # noqa: E402
 from src.notify.telegram import send_telegram  # noqa: E402
 from src.paper import db as pdb  # noqa: E402
 from src.paper.report import telegram_text, write_paper_json, write_paper_report  # noqa: E402
@@ -30,7 +30,7 @@ def main() -> int:
     cfg = load_config()
     conn = pdb.connect(cfg.db_path)
     try:
-        summary = run_step(BybitPublicClient(), conn, cfg, threshold=args.threshold)
+        summary = run_step(make_source(cfg), conn, cfg, threshold=args.threshold)
         path = write_paper_report(summary, conn, cfg, cfg.reports_dir)
         write_paper_json(summary, conn, cfg, cfg.site_data_dir / "paper.json")
     finally:

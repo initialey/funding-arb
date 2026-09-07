@@ -1,0 +1,52 @@
+{
+  "thresholds": [
+    {
+      "threshold": 5e-05,
+      "days": 179.6667361111111,
+      "net_pnl": -516.2835,
+      "funding_pnl": 35.7165,
+      "costs": 552.0,
+      "apr": -0.10488501187190329,
+      "max_drawdown": -0.051628349999999774,
+      "exposure_days_ratio": 0.9388888888888889,
+      "avg_slot_utilisation": 0.06832096474953618,
+      "trades": 368
+    },
+    {
+      "threshold": 0.0001,
+      "days": 179.6667361111111,
+      "net_pnl": -126.09600000000002,
+      "funding_pnl": 10.404000000000002,
+      "costs": 136.5,
+      "apr": -0.02561689547893651,
+      "max_drawdown": -0.012609599999999955,
+      "exposure_days_ratio": 0.45555555555555555,
+      "avg_slot_utilisation": 0.01238404452690167,
+      "trades": 91
+    },
+    {
+      "threshold": 0.0002,
+      "days": 179.6667361111111,
+      "net_pnl": 0.0,
+      "funding_pnl": 0.0,
+      "costs": 0.0,
+      "apr": 0.0,
+      "max_drawdown": 0.0,
+      "exposure_days_ratio": 0.0,
+      "avg_slot_utilisation": 0.0,
+      "trades": 0
+    }
+  ],
+  "walkforward_oos": {
+    "threshold": NaN,
+    "days": 119.6667361111111,
+    "net_pnl": 0.0,
+    "funding_pnl": 0.0,
+    "costs": 0.0,
+    "apr": 0.0,
+    "max_drawdown": 0.0,
+    "exposure_days_ratio": 0.0,
+    "avg_slot_utilisation": 0.0,
+    "trades": 0
+  }
+}
