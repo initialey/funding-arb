@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from src.backtest.engine import run_backtest  # noqa: E402
 from src.backtest.metrics import summarise  # noqa: E402
-from src.backtest.report import write_backtest_report  # noqa: E402
+from src.backtest.report import write_backtest_json, write_backtest_report  # noqa: E402
 from src.backtest.walkforward import run_walkforward  # noqa: E402
 from src.config import load_config  # noqa: E402
 from src.data.storage import funding_path, load_parquet  # noqa: E402
@@ -46,6 +46,7 @@ def main() -> int:
         logging.info("walk-forward OOS APR %.2f%% over %d windows", wf.oos_summary.apr * 100, len(wf.windows))
 
     path = write_backtest_report(results, summaries, wf, cfg, funding, cfg.reports_dir)
+    write_backtest_json(results, summaries, wf, cfg, funding, cfg.site_data_dir / "backtest.json")
     (cfg.reports_dir / "backtest_summary.json").write_text(
         json.dumps(
             {

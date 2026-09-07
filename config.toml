@@ -35,3 +35,4 @@ maintenance_margin_rate = 0.005   # 0.5 % (Bybit tier-1 for majors; conservative
 [paths]
 data_dir = "data"
 reports_dir = "reports"
+site_dir = "docs"           # GitHub Pages dashboard; JSON data goes to docs/data/

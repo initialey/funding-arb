@@ -1,6 +1,7 @@
 """Markdown + PNG output for backtest and walk-forward results."""
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -137,3 +138,81 @@ def write_backtest_report(
     path = out_dir / "backtest_report.md"
     path.write_text("\n".join(md) + "\n")
     return path
+
+
+def _daily_curve(equity: pd.DataFrame) -> list[dict]:
+    """Downsample an equity frame to one point per day for the dashboard."""
+    if equity.empty:
+        return []
+    d = equity.assign(day=equity["ts"].dt.floor("D")).groupby("day", as_index=False).agg(equity=("equity", "last"), n_open=("n_open", "max"))
+    return [{"t": row.day.strftime("%Y-%m-%d"), "equity": round(float(row.equity), 2), "n_open": int(row.n_open)} for row in d.itertuples()]
+
+
+def write_backtest_json(
+    results: dict[float, BacktestResult],
+    summaries: list[Summary],
+    wf: WalkForwardResult | None,
+    cfg: Config,
+    funding: pd.DataFrame,
+    path: Path,
+) -> Path:
+    """Machine-readable twin of the Markdown report, consumed by docs/index.html."""
+    best = max(summaries, key=lambda s: s.apr)
+    payload = {
+        "generated_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "data": {
+            "symbols": sorted(funding["symbol"].unique().tolist()),
+            "events": int(len(funding)),
+            "start": funding["ts"].min().strftime("%Y-%m-%d"),
+            "end": funding["ts"].max().strftime("%Y-%m-%d"),
+        },
+        "config": {
+            "capital": cfg.capital.total_usdt,
+            "slots": cfg.universe.size,
+            "leg_notional": cfg.leg_notional,
+            "leverage": cfg.capital.leverage,
+            "cost_per_fill": cfg.costs.per_fill,
+            "round_trip_cost": cfg.costs.round_trip,
+            "lookback": cfg.strategy.lookback,
+            "train_days": cfg.walkforward.train_days,
+            "test_days": cfg.walkforward.test_days,
+            "step_days": cfg.walkforward.step_days,
+        },
+        "best_threshold": best.threshold,
+        "thresholds": [s.as_dict() for s in summaries],
+        "curves": {f"{thr:.6f}": _daily_curve(res.equity) for thr, res in results.items()},
+        "per_symbol": per_symbol_table(results[best.threshold], cfg.slot_usdt).fillna(0).to_dict(orient="records"),
+        "walkforward": None,
+    }
+    if wf is not None:
+        payload["walkforward"] = {
+            "oos": wf.oos_summary.as_dict(),
+            "curve": _daily_curve(wf.oos_equity),
+            "windows": [
+                {
+                    "train_start": w.train_start.strftime("%Y-%m-%d"),
+                    "train_end": w.train_end.strftime("%Y-%m-%d"),
+                    "test_end": w.test_end.strftime("%Y-%m-%d"),
+                    "chosen_threshold": w.chosen_threshold,
+                    "train_apr": w.train_apr,
+                    "test_apr": w.test_summary.apr,
+                    "test_max_drawdown": w.test_summary.max_drawdown,
+                    "test_trades": w.test_summary.trades,
+                }
+                for w in wf.windows
+            ],
+        }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(_json_safe(payload), indent=1, default=str))
+    return path
+
+
+def _json_safe(obj):
+    """Strict JSON has no NaN/Infinity; browsers reject them, so map to null."""
+    if isinstance(obj, dict):
+        return {k: _json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_json_safe(v) for v in obj]
+    if isinstance(obj, float) and (obj != obj or obj in (float("inf"), float("-inf"))):
+        return None
+    return obj

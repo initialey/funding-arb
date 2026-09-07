@@ -1,6 +1,7 @@
 """Markdown / PNG report and Telegram text for one paper-trading step."""
 from __future__ import annotations
 
+import json
 import sqlite3
 from datetime import datetime
 from pathlib import Path
@@ -94,6 +95,58 @@ def write_paper_report(summary: RunSummary, conn: sqlite3.Connection, cfg: Confi
     ]
     path = out_dir / "paper_latest.md"
     path.write_text("\n".join(md) + "\n")
+    return path
+
+
+def write_paper_json(summary: RunSummary, conn: sqlite3.Connection, cfg: Config, path: Path) -> Path:
+    """Dashboard payload: latest run, per-symbol states, equity history, recent trades."""
+    runs = pdb.equity_history(conn)
+    first_ts = datetime.strptime(runs[0]["ts"], "%Y-%m-%dT%H:%M:%SZ") if runs else summary.ts.replace(tzinfo=None)
+    days = max((summary.ts.replace(tzinfo=None) - first_ts).total_seconds() / 86_400, 0.0)
+    ret = summary.equity / cfg.capital.total_usdt - 1
+    trades = conn.execute(
+        "SELECT ts, symbol, side, spot_price, perp_price, notional, fees, realized, signal FROM trades ORDER BY trade_id DESC LIMIT 50"
+    ).fetchall()
+    funding_total = conn.execute("SELECT COALESCE(SUM(amount), 0) FROM funding_events").fetchone()[0]
+    payload = {
+        "generated_at": summary.ts.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "run_id": summary.run_id,
+        "threshold": summary.threshold,
+        "lookback": cfg.strategy.lookback,
+        "capital": cfg.capital.total_usdt,
+        "slots": cfg.universe.size,
+        "universe": summary.universe,
+        "equity": summary.equity,
+        "cash": summary.cash,
+        "return": ret,
+        "days": days,
+        "apr": (ret * 365 / days) if days >= 1 else None,
+        "realized_total": summary.realized_total,
+        "funding_total": float(funding_total),
+        "funding_this_run": summary.funding_received,
+        "n_open": summary.n_open,
+        "skipped": summary.skipped,
+        "states": [
+            {
+                "symbol": s.symbol,
+                "held": s.held,
+                "action": s.action,
+                "signal": s.signal,
+                "mark_price": s.mark_price,
+                "spot_price": s.spot_price,
+                "funding_accrued": s.funding_accrued if s.held else None,
+                "unrealized": s.unrealized,
+                "margin_ratio": s.margin_ratio,
+                "liq_price": s.liq_price,
+                "liq_distance": s.liq_distance,
+            }
+            for s in summary.states
+        ],
+        "equity_history": [{"t": r["ts"], "equity": r["equity"], "n_open": r["n_open"]} for r in runs],
+        "recent_trades": [dict(t) for t in trades],
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=1, default=str))
     return path
 
 

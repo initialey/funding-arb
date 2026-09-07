@@ -61,6 +61,7 @@ class PaperConfig:
 class PathsConfig:
     data_dir: str = "data"
     reports_dir: str = "reports"
+    site_dir: str = "docs"
 
 
 @dataclass(frozen=True)
@@ -80,6 +81,10 @@ class Config:
     @property
     def reports_dir(self) -> Path:
         return ROOT / self.paths.reports_dir
+
+    @property
+    def site_data_dir(self) -> Path:
+        return ROOT / self.paths.site_dir / "data"
 
     @property
     def db_path(self) -> Path:

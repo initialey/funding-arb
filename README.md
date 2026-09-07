@@ -74,6 +74,18 @@ Every 8 hours (10 minutes after Bybit settlement) the workflow:
 Fetch failures are retried with back-off; a symbol that still fails is skipped, logged in the
 `skips` table and left untouched until the next run.
 
+## Dashboard (GitHub Pages)
+
+`docs/index.html` is a static dashboard that reads `docs/data/backtest.json` and
+`docs/data/paper.json`, both written by the scripts and committed by the workflows.
+Enable it once: **Settings → Pages → Source: Deploy from a branch → `master` / `/docs`**.
+The page then lives at `https://<owner>.github.io/funding-arb/` and refreshes itself
+every time a workflow commits new data (a few minutes after each run).
+
+Tabs: *ペーパートレード* (equity, positions, margin ratio, liquidation distance, recent
+trades) and *バックテスト* (threshold comparison, equity curves, per-symbol breakdown,
+walk-forward table). Until the first run each tab shows how to trigger it.
+
 ## Data
 
 `data/funding_history.parquet` (`symbol, ts, funding_rate`) and `data/klines_daily.parquet`

@@ -16,7 +16,7 @@ from src.config import load_config  # noqa: E402
 from src.data.bybit_client import BybitPublicClient  # noqa: E402
 from src.notify.telegram import send_telegram  # noqa: E402
 from src.paper import db as pdb  # noqa: E402
-from src.paper.report import telegram_text, write_paper_report  # noqa: E402
+from src.paper.report import telegram_text, write_paper_json, write_paper_report  # noqa: E402
 from src.paper.runner import run_step  # noqa: E402
 
 
@@ -32,6 +32,7 @@ def main() -> int:
     try:
         summary = run_step(BybitPublicClient(), conn, cfg, threshold=args.threshold)
         path = write_paper_report(summary, conn, cfg, cfg.reports_dir)
+        write_paper_json(summary, conn, cfg, cfg.site_data_dir / "paper.json")
     finally:
         conn.close()
     logging.info("run #%d equity %.2f open %d skipped %d -> %s", summary.run_id, summary.equity, summary.n_open, len(summary.skipped), path)
