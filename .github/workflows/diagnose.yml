@@ -1,0 +1,34 @@
+name: diagnose-egress
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["claude/**"]
+    paths: [".github/workflows/diagnose.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Runner location
+        run: curl -sS --max-time 10 https://ipinfo.io/json || true
+      - name: Bybit (default UA)
+        run: curl -sS --max-time 15 -o /dev/null -w "bybit default UA -> %{http_code}\n" "https://api.bybit.com/v5/market/time" || true
+      - name: Bybit (browser UA)
+        run: curl -sS --max-time 15 -A "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/128 Safari/537.36" -o /dev/null -w "bybit browser UA -> %{http_code}\n" "https://api.bybit.com/v5/market/time" || true
+      - name: Bybit alt domains
+        run: |
+          for h in api.bytick.com api.bybit.nl api.bybit-tr.com api.bybit.kz api.bybitgeorgia.ge; do
+            curl -sS --max-time 15 -o /dev/null -w "$h -> %{http_code}\n" "https://$h/v5/market/time" || echo "$h -> error"
+          done
+      - name: Other venues (read-only public endpoints)
+        run: |
+          curl -sS --max-time 15 -o /dev/null -w "okx -> %{http_code}\n" "https://www.okx.com/api/v5/public/funding-rate?instId=BTC-USDT-SWAP" || true
+          curl -sS --max-time 15 -o /dev/null -w "binance fapi -> %{http_code}\n" "https://fapi.binance.com/fapi/v1/fundingRate?symbol=BTCUSDT&limit=1" || true
+          curl -sS --max-time 15 -o /dev/null -w "bitget -> %{http_code}\n" "https://api.bitget.com/api/v2/mix/market/current-fund-rate?symbol=BTCUSDT&productType=USDT-FUTURES" || true
+          curl -sS --max-time 15 -o /dev/null -w "gate -> %{http_code}\n" "https://api.gateio.ws/api/v4/futures/usdt/funding_rate?contract=BTC_USDT&limit=1" || true
+          curl -sS --max-time 15 -o /dev/null -w "hyperliquid -> %{http_code}\n" -H "Content-Type: application/json" -d '{"type":"meta"}' "https://api.hyperliquid.xyz/info" || true
