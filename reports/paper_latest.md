@@ -1,14 +1,14 @@
 # Paper trading status
 
-Run #24 at 2026-09-15 13:28 UTC. Threshold 0.010% per funding interval, signal = mean of last 3 settled rates. Universe: BTCUSDT, ETHUSDT, SOLUSDT, ZECUSDT, XRPUSDT, BZUSDT, BNBUSDT, SOXLUSDT, OPENAIUSDT, DOGEUSDT.
+Run #25 at 2026-09-15 19:40 UTC. Threshold 0.010% per funding interval, signal = mean of last 3 settled rates. Universe: BTCUSDT, ETHUSDT, SOLUSDT, XRPUSDT, ZECUSDT, OPENAIUSDT, BNBUSDT, DOGEUSDT, SOXLUSDT, BZUSDT.
 
 | metric | value |
 |---|---|
-| equity | 9,992.26 USDT |
-| return since start | -0.08% (7.8 days) |
-| annualised | -3.62% |
+| equity | 9,992.24 USDT |
+| return since start | -0.08% (8.1 days) |
+| annualised | -3.51% |
 | realized (closed pairs) | -7.20 USDT |
-| funding received this run | 0.0334 USDT |
+| funding received this run | 0.0336 USDT |
 | open pairs | 1 / 10 |
 | free cash | 8,992.80 USDT |
 | skipped symbols | 0 |
@@ -17,17 +17,17 @@ Run #24 at 2026-09-15 13:28 UTC. Threshold 0.010% per funding interval, signal =
 
 | symbol | held | action | signal | mark | spot | funding accrued | basis MTM | margin ratio | liq. price | liq. distance |
 |---|---|---|---|---|---|---|---|---|---|---|
-| UAIUSDT | yes |  | 0.0100% | 0.3808 | 0.3808 | 0.5877 | -0.3786 | 0.25% | 1.1328 | 197.5% |
-| BNBUSDT | no |  | 0.0001% | 720.7000 | 721.0000 | - | - | - | - | - |
-| BTCUSDT | no |  | 0.0055% | 76,946.4000 | 76,980.4000 | - | - | - | - | - |
-| BZUSDT | no |  | -0.1631% | 101.7800 | 101.7800 | - | - | - | - | - |
-| DOGEUSDT | no |  | 0.0025% | 0.0831 | 0.0831 | - | - | - | - | - |
-| ETHUSDT | no |  | 0.0043% | 2,478.7100 | 2,479.1600 | - | - | - | - | - |
-| OPENAIUSDT | no |  | 0.0000% | 1,479.2400 | 889.1000 | - | - | - | - | - |
-| SOLUSDT | no |  | 0.0019% | 100.9100 | 100.9500 | - | - | - | - | - |
-| SOXLUSDT | no |  | 0.0000% | 104.3000 | 104.3500 | - | - | - | - | - |
-| XRPUSDT | no |  | 0.0044% | 1.4341 | 1.4353 | - | - | - | - | - |
-| ZECUSDT | no |  | 0.0005% | 1,135.8200 | 1,136.6800 | - | - | - | - | - |
+| UAIUSDT | yes |  | 0.0100% | 0.3820 | 0.3820 | 0.6212 | -0.4326 | 0.25% | 1.1328 | 196.5% |
+| BNBUSDT | no |  | 0.0036% | 719.5000 | 719.8000 | - | - | - | - | - |
+| BTCUSDT | no |  | 0.0061% | 76,019.3000 | 76,054.4000 | - | - | - | - | - |
+| BZUSDT | no |  | -0.0709% | 103.0500 | 103.0300 | - | - | - | - | - |
+| DOGEUSDT | no |  | 0.0033% | 0.0809 | 0.0809 | - | - | - | - | - |
+| ETHUSDT | no |  | 0.0034% | 2,408.4400 | 2,409.5700 | - | - | - | - | - |
+| OPENAIUSDT | no |  | 0.0000% | 1,442.7900 | 872.8000 | - | - | - | - | - |
+| SOLUSDT | no |  | -0.0011% | 97.9500 | 97.9900 | - | - | - | - | - |
+| SOXLUSDT | no |  | 0.0000% | 102.1900 | 102.1900 | - | - | - | - | - |
+| XRPUSDT | no |  | 0.0064% | 1.3048 | 1.3056 | - | - | - | - | - |
+| ZECUSDT | no |  | 0.0039% | 1,139.3900 | 1,140.0000 | - | - | - | - | - |
 
 ![equity](paper_equity.png)
 
