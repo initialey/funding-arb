@@ -1,32 +1,32 @@
 # Paper trading status
 
-Run #72 at 2026-10-01 20:59 UTC. Threshold 0.010% per funding interval, signal = mean of last 3 settled rates. Universe: BTCUSDT, ETHUSDT, SOLUSDT, ZECUSDT, SOXLUSDT, XRPUSDT, MOVRUSDT, MUUSDT, NEARUSDT, SOXSUSDT.
+Run #73 at 2026-10-02 05:27 UTC. Threshold 0.010% per funding interval, signal = mean of last 3 settled rates. Universe: BTCUSDT, ETHUSDT, SOLUSDT, ZECUSDT, SOXLUSDT, XRPUSDT, MUUSDT, NEARUSDT, MOVRUSDT, DOGEUSDT.
 
 | metric | value |
 |---|---|
-| equity | 9,963.90 USDT |
-| return since start | -0.36% (24.1 days) |
+| equity | 9,963.35 USDT |
+| return since start | -0.37% (24.5 days) |
 | annualised | -5.46% |
-| realized (closed pairs) | -35.54 USDT |
-| funding received this run | 0.0442 USDT |
-| open pairs | 1 / 10 |
-| free cash | 8,964.46 USDT |
+| realized (closed pairs) | -36.65 USDT |
+| funding received this run | -0.0857 USDT |
+| open pairs | 0 / 10 |
+| free cash | 9,963.35 USDT |
 | skipped symbols | 0 |
 
 ## Positions & risk
 
 | symbol | held | action | signal | mark | spot | funding accrued | basis MTM | margin ratio | liq. price | liq. distance |
 |---|---|---|---|---|---|---|---|---|---|---|
-| NEARUSDT | yes |  | 0.0100% | 4.8407 | 4.8450 | 0.0890 | 0.1019 | 0.40% | 10.8923 | 125.0% |
-| BTCUSDT | no |  | 0.0036% | 84,586.7000 | 84,631.1000 | - | - | - | - | - |
-| ETHUSDT | no |  | 0.0022% | 2,697.3600 | 2,698.6200 | - | - | - | - | - |
-| MOVRUSDT | no |  | -0.0237% | 2.9340 | 2.9343 | - | - | - | - | - |
-| MUUSDT | no |  | 0.0000% | 1,091.1700 | 1,091.2000 | - | - | - | - | - |
-| SOLUSDT | no |  | -0.0014% | 118.1000 | 118.1600 | - | - | - | - | - |
-| SOXLUSDT | no |  | 0.0000% | 153.8500 | 153.8300 | - | - | - | - | - |
-| SOXSUSDT | no |  | 0.0000% | 31.7800 | 31.7900 | - | - | - | - | - |
-| XRPUSDT | no |  | 0.0053% | 1.4978 | 1.4985 | - | - | - | - | - |
-| ZECUSDT | no |  | 0.0085% | 1,336.3500 | 1,336.5400 | - | - | - | - | - |
+| BTCUSDT | no |  | 0.0005% | 86,324.5000 | 86,356.9000 | - | - | - | - | - |
+| DOGEUSDT | no |  | 0.0056% | 0.0961 | 0.0962 | - | - | - | - | - |
+| ETHUSDT | no |  | 0.0020% | 2,726.5300 | 2,727.4600 | - | - | - | - | - |
+| MOVRUSDT | no |  | -0.0332% | 2.2380 | 2.2474 | - | - | - | - | - |
+| MUUSDT | no |  | 0.0000% | 1,092.1300 | 1,092.1400 | - | - | - | - | - |
+| NEARUSDT | no | CLOSE | 0.0004% | 4.9642 | 4.9710 | - | - | - | - | - |
+| SOLUSDT | no |  | 0.0004% | 122.7300 | 122.7700 | - | - | - | - | - |
+| SOXLUSDT | no |  | 0.0000% | 156.0300 | 156.0100 | - | - | - | - | - |
+| XRPUSDT | no |  | 0.0071% | 1.5210 | 1.5214 | - | - | - | - | - |
+| ZECUSDT | no |  | 0.0094% | 1,393.6600 | 1,393.2100 | - | - | - | - | - |
 
 ![equity](paper_equity.png)
 
