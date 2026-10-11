@@ -1,14 +1,14 @@
 # Paper trading status
 
-Run #100 at 2026-10-11 14:52 UTC. Threshold 0.010% per funding interval, signal = mean of last 3 settled rates. Universe: BTCUSDT, ETHUSDT, SOLUSDT, XRPUSDT, ZECUSDT, MAGICUSDT, NEARUSDT, CFXUSDT, WLDUSDT, ADAUSDT.
+Run #101 at 2026-10-11 20:12 UTC. Threshold 0.010% per funding interval, signal = mean of last 3 settled rates. Universe: BTCUSDT, ETHUSDT, SOLUSDT, XRPUSDT, ZECUSDT, NEARUSDT, MAGICUSDT, ADAUSDT, DOGEUSDT, WLDUSDT.
 
 | metric | value |
 |---|---|
-| equity | 9,941.86 USDT |
-| return since start | -0.58% (33.9 days) |
-| annualised | -6.26% |
+| equity | 9,941.76 USDT |
+| return since start | -0.58% (34.1 days) |
+| annualised | -6.23% |
 | realized (closed pairs) | -57.39 USDT |
-| funding received this run | 0.0414 USDT |
+| funding received this run | 0.0531 USDT |
 | open pairs | 1 / 10 |
 | free cash | 8,942.61 USDT |
 | skipped symbols | 0 |
@@ -17,16 +17,16 @@ Run #100 at 2026-10-11 14:52 UTC. Threshold 0.010% per funding interval, signal 
 
 | symbol | held | action | signal | mark | spot | funding accrued | basis MTM | margin ratio | liq. price | liq. distance |
 |---|---|---|---|---|---|---|---|---|---|---|
-| NEARUSDT | yes | OPEN | 0.0100% | 5.3360 | 5.3380 | 0.0000 | 0.0000 | 0.50% | 10.6189 | 99.0% |
-| ADAUSDT | no |  | 0.0077% | 0.2483 | 0.2485 | - | - | - | - | - |
-| BTCUSDT | no |  | -0.0005% | 83,106.1100 | 83,143.4000 | - | - | - | - | - |
-| CFXUSDT | no |  | 0.0033% | 0.0706 | 0.0706 | - | - | - | - | - |
-| ETHUSDT | no |  | -0.0024% | 2,505.4600 | 2,506.5500 | - | - | - | - | - |
-| MAGICUSDT | no |  | -0.4043% | 0.1297 | 0.1295 | - | - | - | - | - |
-| SOLUSDT | no |  | 0.0024% | 109.6500 | 109.7000 | - | - | - | - | - |
-| WLDUSDT | no | CLOSE | 0.0094% | 0.5681 | 0.5683 | - | - | - | - | - |
-| XRPUSDT | no |  | 0.0022% | 1.3998 | 1.4005 | - | - | - | - | - |
-| ZECUSDT | no |  | 0.0070% | 1,233.0100 | 1,233.1600 | - | - | - | - | - |
+| NEARUSDT | yes |  | 0.0100% | 5.6715 | 5.6720 | 0.0531 | -0.1523 | 0.57% | 10.6189 | 87.2% |
+| ADAUSDT | no |  | 0.0072% | 0.2532 | 0.2534 | - | - | - | - | - |
+| BTCUSDT | no |  | -0.0013% | 83,663.0000 | 83,692.5000 | - | - | - | - | - |
+| DOGEUSDT | no |  | 0.0037% | 0.0869 | 0.0869 | - | - | - | - | - |
+| ETHUSDT | no |  | -0.0023% | 2,536.9500 | 2,538.1900 | - | - | - | - | - |
+| MAGICUSDT | no |  | -0.1184% | 0.1357 | 0.1358 | - | - | - | - | - |
+| SOLUSDT | no |  | 0.0032% | 111.2700 | 111.3100 | - | - | - | - | - |
+| WLDUSDT | no |  | 0.0069% | 0.5620 | 0.5623 | - | - | - | - | - |
+| XRPUSDT | no |  | 0.0007% | 1.4069 | 1.4077 | - | - | - | - | - |
+| ZECUSDT | no |  | 0.0095% | 1,274.9700 | 1,275.6900 | - | - | - | - | - |
 
 ![equity](paper_equity.png)
 
