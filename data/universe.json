@@ -6,11 +6,11 @@
     "SOLUSDT",
     "ZECUSDT",
     "XRPUSDT",
+    "DOGEUSDT",
+    "BNBUSDT",
     "SOXLUSDT",
     "NEARUSDT",
-    "SOXSUSDT",
-    "DOGEUSDT",
-    "BNBUSDT"
+    "LTCUSDT"
   ],
   "skipped": {}
 }
