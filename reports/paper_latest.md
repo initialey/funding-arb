@@ -1,32 +1,32 @@
 # Paper trading status
 
-Run #155 at 2026-10-30 05:37 UTC. Threshold 0.010% per funding interval, signal = mean of last 3 settled rates. Universe: BTCUSDT, ETHUSDT, SOLUSDT, ZECUSDT, DOGEUSDT, SOXLUSDT, BNBUSDT, XRPUSDT, PEPEUSDT, NEARUSDT.
+Run #156 at 2026-10-30 15:00 UTC. Threshold 0.010% per funding interval, signal = mean of last 3 settled rates. Universe: BTCUSDT, ETHUSDT, SOLUSDT, ZECUSDT, DOGEUSDT, SOXLUSDT, XRPUSDT, BNBUSDT, PEPEUSDT, INTCUSDT.
 
 | metric | value |
 |---|---|
-| equity | 9,924.53 USDT |
-| return since start | -0.75% (52.5 days) |
-| annualised | -5.25% |
+| equity | 9,923.78 USDT |
+| return since start | -0.76% (52.9 days) |
+| annualised | -5.26% |
 | realized (closed pairs) | -75.47 USDT |
 | funding received this run | 0.0000 USDT |
-| open pairs | 0 / 10 |
-| free cash | 9,924.53 USDT |
+| open pairs | 1 / 10 |
+| free cash | 8,924.53 USDT |
 | skipped symbols | 0 |
 
 ## Positions & risk
 
 | symbol | held | action | signal | mark | spot | funding accrued | basis MTM | margin ratio | liq. price | liq. distance |
 |---|---|---|---|---|---|---|---|---|---|---|
-| BNBUSDT | no |  | 0.0052% | 718.3500 | 719.1000 | - | - | - | - | - |
-| BTCUSDT | no |  | 0.0067% | 78,710.5000 | 78,747.3000 | - | - | - | - | - |
-| DOGEUSDT | no |  | 0.0021% | 0.0765 | 0.0765 | - | - | - | - | - |
-| ETHUSDT | no |  | 0.0014% | 2,248.6600 | 2,250.0100 | - | - | - | - | - |
-| NEARUSDT | no |  | 0.0060% | 4.2612 | 4.2630 | - | - | - | - | - |
+| INTCUSDT | yes | OPEN | 0.0273% | 66.3400 | 66.4500 | 0.0000 | 0.0000 | 0.50% | 132.0199 | 99.0% |
+| BNBUSDT | no |  | -0.0034% | 698.7500 | 699.0000 | - | - | - | - | - |
+| BTCUSDT | no |  | 0.0044% | 77,210.6000 | 77,221.2000 | - | - | - | - | - |
+| DOGEUSDT | no |  | 0.0007% | 0.0757 | 0.0757 | - | - | - | - | - |
+| ETHUSDT | no |  | -0.0030% | 2,236.7200 | 2,237.7600 | - | - | - | - | - |
 | PEPEUSDT | no |  | 0.0057% | 0.0000 | 0.0000 | - | - | - | - | - |
-| SOLUSDT | no |  | 0.0029% | 98.2400 | 98.2700 | - | - | - | - | - |
-| SOXLUSDT | no |  | 0.0000% | 87.3700 | 87.4000 | - | - | - | - | - |
-| XRPUSDT | no |  | 0.0041% | 1.2599 | 1.2610 | - | - | - | - | - |
-| ZECUSDT | no |  | 0.0058% | 1,271.7600 | 1,272.3600 | - | - | - | - | - |
+| SOLUSDT | no |  | 0.0001% | 94.5100 | 94.4900 | - | - | - | - | - |
+| SOXLUSDT | no |  | 0.0000% | 80.0700 | 80.0400 | - | - | - | - | - |
+| XRPUSDT | no |  | 0.0014% | 1.2440 | 1.2443 | - | - | - | - | - |
+| ZECUSDT | no |  | 0.0071% | 1,239.3100 | 1,240.0900 | - | - | - | - | - |
 
 ![equity](paper_equity.png)
 
