@@ -1,33 +1,33 @@
 # Paper trading status
 
-Run #169 at 2026-11-04 06:05 UTC. Threshold 0.010% per funding interval, signal = mean of last 3 settled rates. Universe: BTCUSDT, ETHUSDT, SOLUSDT, SOXLUSDT, ZECUSDT, DOGEUSDT, XRPUSDT, INTCUSDT, SOXSUSDT, QQQUSDT.
+Run #170 at 2026-11-04 16:13 UTC. Threshold 0.010% per funding interval, signal = mean of last 3 settled rates. Universe: BTCUSDT, ETHUSDT, SOLUSDT, SOXLUSDT, ZECUSDT, DOGEUSDT, SOXSUSDT, INTCUSDT, XRPUSDT, QQQUSDT.
 
 | metric | value |
 |---|---|
-| equity | 9,915.08 USDT |
-| return since start | -0.85% (57.5 days) |
-| annualised | -5.39% |
-| realized (closed pairs) | -84.15 USDT |
-| funding received this run | 0.2118 USDT |
+| equity | 9,911.84 USDT |
+| return since start | -0.88% (57.9 days) |
+| annualised | -5.55% |
+| realized (closed pairs) | -86.52 USDT |
+| funding received this run | 0.1675 USDT |
 | open pairs | 3 / 10 |
-| free cash | 6,915.85 USDT |
+| free cash | 6,913.48 USDT |
 | skipped symbols | 0 |
 
 ## Positions & risk
 
 | symbol | held | action | signal | mark | spot | funding accrued | basis MTM | margin ratio | liq. price | liq. distance |
 |---|---|---|---|---|---|---|---|---|---|---|
-| BTCUSDT | yes |  | 0.0100% | 77,818.7500 | 77,858.6000 | 0.0501 | 0.0830 | 0.50% | 154,487.5622 | 98.5% |
-| QQQUSDT | yes |  | 0.0102% | 684.9200 | 685.0100 | 0.5104 | 0.0574 | 0.48% | 1,391.3433 | 103.1% |
-| UNIUSDT | yes |  | 0.0100% | 7.3080 | 7.3130 | 0.3545 | 0.4230 | 0.53% | 14.1771 | 94.0% |
-| DOGEUSDT | no |  | 0.0082% | 0.0746 | 0.0747 | - | - | - | - | - |
-| ETHUSDT | no |  | 0.0083% | 2,292.9800 | 2,293.5700 | - | - | - | - | - |
-| INTCUSDT | no |  | 0.0039% | 60.2700 | 60.2700 | - | - | - | - | - |
-| SOLUSDT | no |  | 0.0082% | 92.8700 | 92.8900 | - | - | - | - | - |
-| SOXLUSDT | no |  | 0.0000% | 75.0900 | 75.1300 | - | - | - | - | - |
-| SOXSUSDT | no |  | -0.0014% | 52.3300 | 52.2500 | - | - | - | - | - |
-| XRPUSDT | no |  | 0.0090% | 1.2763 | 1.2768 | - | - | - | - | - |
-| ZECUSDT | no | CLOSE | 0.0099% | 1,252.3900 | 1,253.2600 | - | - | - | - | - |
+| SOLUSDT | yes | OPEN | 0.0100% | 97.2000 | 97.2300 | 0.0000 | 0.0000 | 0.50% | 193.4328 | 99.0% |
+| UNIUSDT | yes |  | 0.0100% | 7.7760 | 7.7770 | 0.4637 | 0.1468 | 0.60% | 14.1771 | 82.3% |
+| XRPUSDT | yes | OPEN | 0.0100% | 1.3197 | 1.3199 | 0.0000 | 0.0000 | 0.50% | 2.6263 | 99.0% |
+| BTCUSDT | no | CLOSE | 0.0066% | 80,614.1000 | 80,639.3000 | - | - | - | - | - |
+| DOGEUSDT | no |  | 0.0052% | 0.0777 | 0.0778 | - | - | - | - | - |
+| ETHUSDT | no |  | 0.0075% | 2,442.0400 | 2,443.0600 | - | - | - | - | - |
+| INTCUSDT | no |  | 0.0076% | 57.9700 | 57.9600 | - | - | - | - | - |
+| QQQUSDT | no | CLOSE | 0.0048% | 695.1000 | 695.1900 | - | - | - | - | - |
+| SOXLUSDT | no |  | 0.0000% | 65.7300 | 65.6500 | - | - | - | - | - |
+| SOXSUSDT | no |  | 0.0000% | 59.2100 | 59.1900 | - | - | - | - | - |
+| ZECUSDT | no |  | 0.0099% | 1,319.0900 | 1,318.5200 | - | - | - | - | - |
 
 ![equity](paper_equity.png)
 
