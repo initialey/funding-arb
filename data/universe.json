@@ -4,13 +4,13 @@
     "BTCUSDT",
     "ETHUSDT",
     "SOLUSDT",
+    "SOXLUSDT",
     "ZECUSDT",
     "DOGEUSDT",
-    "SOXLUSDT",
-    "BNBUSDT",
     "XRPUSDT",
-    "NEARUSDT",
-    "UNIUSDT"
+    "SOXSUSDT",
+    "QQQUSDT",
+    "OPENAIUSDT"
   ],
   "skipped": {}
 }
