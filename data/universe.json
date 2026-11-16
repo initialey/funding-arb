@@ -5,12 +5,12 @@
     "ETHUSDT",
     "SOLUSDT",
     "SOXLUSDT",
-    "ZECUSDT",
     "DOGEUSDT",
-    "XRPUSDT",
+    "ZECUSDT",
     "SOXSUSDT",
-    "QQQUSDT",
-    "OPENAIUSDT"
+    "XRPUSDT",
+    "EVAAUSDT",
+    "QQQUSDT"
   ],
   "skipped": {}
 }
