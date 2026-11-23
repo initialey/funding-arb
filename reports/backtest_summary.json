@@ -2,51 +2,51 @@
   "thresholds": [
     {
       "threshold": 5e-05,
-      "days": 249.0,
-      "net_pnl": -367.82750000000004,
-      "funding_pnl": 106.1725,
-      "costs": 474.0,
-      "apr": -0.053918488955823296,
-      "max_drawdown": -0.03678274999999958,
-      "exposure_days_ratio": 0.948,
-      "avg_slot_utilisation": 0.09116842516608051,
-      "trades": 316
+      "days": 256.3333333333333,
+      "net_pnl": -276.04075,
+      "funding_pnl": 136.45925,
+      "costs": 412.5,
+      "apr": -0.03930619262028609,
+      "max_drawdown": -0.027604075000000013,
+      "exposure_days_ratio": 0.9416342412451362,
+      "avg_slot_utilisation": 0.10360744763382468,
+      "trades": 275
     },
     {
       "threshold": 0.0001,
-      "days": 249.0,
-      "net_pnl": -79.14550000000001,
-      "funding_pnl": 73.85449999999999,
-      "costs": 153.0,
-      "apr": -0.011601649598393576,
-      "max_drawdown": -0.007960599999999977,
-      "exposure_days_ratio": 0.776,
-      "avg_slot_utilisation": 0.04216490816725284,
-      "trades": 102
+      "days": 256.3333333333333,
+      "net_pnl": -51.300549999999994,
+      "funding_pnl": 107.69945,
+      "costs": 159.0,
+      "apr": -0.007304824739921977,
+      "max_drawdown": -0.005130054999999993,
+      "exposure_days_ratio": 0.7821011673151751,
+      "avg_slot_utilisation": 0.060938712179984485,
+      "trades": 106
     },
     {
       "threshold": 0.0002,
-      "days": 249.0,
-      "net_pnl": -17.321499999999997,
-      "funding_pnl": 23.178500000000003,
-      "costs": 40.5,
-      "apr": -0.002539095381526104,
-      "max_drawdown": -0.002590699999999924,
-      "exposure_days_ratio": 0.184,
-      "avg_slot_utilisation": 0.004493942946463462,
-      "trades": 27
+      "days": 256.3333333333333,
+      "net_pnl": -25.242749999999997,
+      "funding_pnl": 33.25724999999999,
+      "costs": 58.5,
+      "apr": -0.0035943837776332903,
+      "max_drawdown": -0.0033828249999998663,
+      "exposure_days_ratio": 0.29961089494163423,
+      "avg_slot_utilisation": 0.007214895267649341,
+      "trades": 39
     }
   ],
   "walkforward_oos": {
     "threshold": NaN,
-    "days": 189.0,
-    "net_pnl": -58.9945,
-    "funding_pnl": 40.0055,
-    "costs": 99.0,
-    "apr": -0.011393117724867726,
-    "max_drawdown": -0.006757999999999992,
-    "exposure_days_ratio": 0.5157894736842106,
-    "avg_slot_utilisation": 0.023604060913705583,
-    "trades": 66
+    "days": 196.33333333333334,
+    "net_pnl": -47.53124999999999,
+    "funding_pnl": 57.46875000000002,
+    "costs": 105.0,
+    "apr": -0.008836454796264855,
+    "max_drawdown": -0.005611674999999923,
+    "exposure_days_ratio": 0.5431472081218274,
+    "avg_slot_utilisation": 0.03281407035175879,
+    "trades": 70
   }
 }
